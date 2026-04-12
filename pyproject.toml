@@ -86,10 +86,10 @@ all = ["cbps-python[plots,sklearn,hdcbps]"]
 
 [project.urls]
 Homepage = "https://cbps-python.readthedocs.io"
-Repository = "https://github.com/gorgeousfish/cbps-python"
+Repository = "https://github.com/gorgeousfish/CBPS-py"
 Documentation = "https://cbps-python.readthedocs.io"
-Changelog = "https://github.com/gorgeousfish/cbps-python/blob/main/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/gorgeousfish/cbps-python/issues"
+Changelog = "https://github.com/gorgeousfish/CBPS-py/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/gorgeousfish/CBPS-py/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

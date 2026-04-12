@@ -62,8 +62,8 @@ pip install 'cbps-python[all]'
 ### Development Installation
 
 ```bash
-git clone https://github.com/gorgeousfish/cbps-python.git
-cd cbps-python
+git clone https://github.com/gorgeousfish/CBPS-py.git
+cd CBPS-py
 pip install -e ".[dev]"
 ```
 
@@ -944,13 +944,21 @@ AGPL-3.0. See [LICENSE](LICENSE) for details.
 
 ## Citation
 
-If you use this package in your research, please cite both the methodology paper and the Python implementation:
+If you use this package in your research, please cite both the methodology papers and the Python implementation:
 
 **APA Format:**
 
-> Cai, X., & Xu, W. (2026). *cbps: Covariate Balancing Propensity Score for Python* (Version 0.1.0) [Computer software]. GitHub. https://github.com/gorgeousfish/cbps-python
+> Cai, X., & Xu, W. (2026). *cbps: Covariate Balancing Propensity Score for Python* (Version 0.1.0) [Computer software]. GitHub. https://github.com/gorgeousfish/CBPS-py
 >
-> Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. *Journal of the Royal Statistical Society Series B: Statistical Methodology*, 76(1), 243-263. https://doi.org/10.1111/rssb.12027
+> Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. *Journal of the Royal Statistical Society Series B: Statistical Methodology*, 76(1), 243-263.
+>
+> Imai, K., & Ratkovic, M. (2015). Robust estimation of inverse probability weights for marginal structural models. *Journal of the American Statistical Association*, 110(511), 1013-1023.
+>
+> Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. *The Annals of Applied Statistics*, 12(1), 156-177.
+>
+> Ning, Y., Peng, S., & Imai, K. (2020). Robust estimation of causal effects via a high-dimensional covariate balancing propensity score. *Biometrika*, 107(3), 533-554.
+>
+> Fan, J., Imai, K., Lee, I., Liu, H., Ning, Y., & Yang, X. (2022). Optimal covariate balancing conditions in propensity score estimation. *Journal of Business & Economic Statistics*, 41(1), 97-110.
 
 **BibTeX:**
 
@@ -960,7 +968,7 @@ If you use this package in your research, please cite both the methodology paper
   author={Cai, Xuanyu and Xu, Wenli},
   year={2026},
   version={0.1.0},
-  url={https://github.com/gorgeousfish/cbps-python}
+  url={https://github.com/gorgeousfish/CBPS-py}
 }
 
 @article{imai2014covariate,

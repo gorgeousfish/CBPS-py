@@ -15,13 +15,13 @@ New to open source? We're happy to help you get started! Here are some ways to m
 - **Report a bug** you've encountered
 - **Add a test case** for an existing function
 
-Look for issues labeled [`good first issue`](https://github.com/gorgeousfish/cbps-python/labels/good%20first%20issue) for beginner-friendly tasks.
+Look for issues labeled [`good first issue`](https://github.com/gorgeousfish/CBPS-py/labels/good%20first%20issue) for beginner-friendly tasks.
 
 ## How to Contribute
 
 ### Reporting Bugs
 
-If you find a bug, please open an issue on our [GitHub Issues](https://github.com/gorgeousfish/cbps-python/issues) page with:
+If you find a bug, please open an issue on our [GitHub Issues](https://github.com/gorgeousfish/CBPS-py/issues) page with:
 
 1. A clear, descriptive title
 2. A detailed description of the problem
@@ -67,8 +67,8 @@ We welcome feature suggestions! Please open an issue with:
 
 ```bash
 # Clone the repository
-git clone https://github.com/gorgeousfish/cbps-python.git
-cd cbps-python
+git clone https://github.com/gorgeousfish/CBPS-py.git
+cd CBPS-py
 
 # Create and activate virtual environment
 python -m venv venv
@@ -269,8 +269,8 @@ def test_cbps_matches_r():
 
 ## Getting Help
 
-- **Questions**: Open a [GitHub Discussion](https://github.com/gorgeousfish/cbps-python/discussions) or Issue
-- **Bug Reports**: Use [GitHub Issues](https://github.com/gorgeousfish/cbps-python/issues)
+- **Questions**: Open a [GitHub Discussion](https://github.com/gorgeousfish/CBPS-py/discussions) or Issue
+- **Bug Reports**: Use [GitHub Issues](https://github.com/gorgeousfish/CBPS-py/issues)
 - **Documentation**: See [https://cbps-python.readthedocs.io](https://cbps-python.readthedocs.io)
 
 ## Maintainers

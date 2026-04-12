@@ -27,6 +27,6 @@ We will:
 
 ## Security Practices
 
-- Dependencies are monitored via [Dependabot](https://github.com/gorgeousfish/cbps-python/security/dependabot)
+- Dependencies are monitored via [Dependabot](https://github.com/gorgeousfish/CBPS-py/security/dependabot)
 - Code is scanned with [Bandit](https://github.com/PyCQA/bandit) for common security issues
 - All CI runs use pinned action versions to prevent supply chain attacks
