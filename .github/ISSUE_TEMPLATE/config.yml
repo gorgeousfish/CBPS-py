@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/gorgeousfish/cbps-python/discussions
+    about: Ask questions and discuss ideas in GitHub Discussions.
+  - name: Documentation
+    url: https://cbps-python.readthedocs.io
+    about: Check the documentation for usage guides and API reference.

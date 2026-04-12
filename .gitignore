@@ -1,0 +1,105 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+.eggs/
+*.whl
+dist/
+build/
+sdist/
+pip-wheel-metadata/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# Type checking
+.mypy_cache/
+.pytype/
+.dmypy.json
+dmypy.json
+
+# Linting
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.conda/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Documentation build
+docs/_build/
+docs/build.log
+docs/build_full.log
+docs/api/
+
+# Tox / Nox
+.tox/
+.nox/
+
+# Backup files
+*.backup
+*.bak
+
+# Generated plot files (from running examples)
+*.png
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Distribution / packaging
+*.tar.gz
+*.whl
+MANIFEST
+
+# Logs
+*.log
+
+# Cache
+.cache/
+
+# Benchmarks
+.benchmarks/
+
+# Profiling
+*.prof
+*.pstats
+
+# Setuptools
+*.egg-info/
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environments
+.env
+*.env
+
+# Sphinx documentation build artifacts
+docs/generated/
+
+# Top-level data directory (redundant with cbps/data/)
+/data/

@@ -1,0 +1,111 @@
+cff-version: 1.2.0
+title: "cbps: Covariate Balancing Propensity Score for Python"
+message: >-
+  If you use this software, please cite it using the metadata from this file,
+  as well as the relevant methodology paper(s) listed below.
+type: software
+authors:
+  - given-names: Xuanyu
+    family-names: Cai
+    email: xuanyuCAI@outlook.com
+    affiliation: City University of Macau
+  - given-names: Wenli
+    family-names: Xu
+    email: wlxu@cityu.edu.mo
+    affiliation: City University of Macau
+repository-code: "https://github.com/gorgeousfish/cbps-python"
+url: "https://cbps-python.readthedocs.io"
+license: AGPL-3.0
+version: 0.1.0
+date-released: "2026-02-16"
+keywords:
+  - causal-inference
+  - propensity-score
+  - covariate-balancing
+  - treatment-effects
+  - observational-studies
+  - inverse-probability-weighting
+  - generalized-method-of-moments
+references:
+  - type: article
+    title: "Covariate balancing propensity score"
+    authors:
+      - given-names: Kosuke
+        family-names: Imai
+      - given-names: Marc
+        family-names: Ratkovic
+    journal: "Journal of the Royal Statistical Society: Series B (Statistical Methodology)"
+    year: 2014
+    volume: 76
+    issue: 1
+    start: 243
+    end: 263
+    doi: "10.1111/rssb.12027"
+  - type: article
+    title: "Robust estimation of inverse probability weights for marginal structural models"
+    authors:
+      - given-names: Kosuke
+        family-names: Imai
+      - given-names: Marc
+        family-names: Ratkovic
+    journal: "Journal of the American Statistical Association"
+    year: 2015
+    volume: 110
+    issue: 511
+    start: 1013
+    end: 1023
+    doi: "10.1080/01621459.2014.956872"
+  - type: article
+    title: "Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements"
+    authors:
+      - given-names: Christian
+        family-names: Fong
+      - given-names: Chad
+        family-names: Hazlett
+      - given-names: Kosuke
+        family-names: Imai
+    journal: "The Annals of Applied Statistics"
+    year: 2018
+    volume: 12
+    issue: 1
+    start: 156
+    end: 177
+    doi: "10.1214/17-AOAS1101"
+  - type: article
+    title: "Robust estimation of causal effects via a high-dimensional covariate balancing propensity score"
+    authors:
+      - given-names: Yang
+        family-names: Ning
+      - given-names: Sida
+        family-names: Peng
+      - given-names: Kosuke
+        family-names: Imai
+    journal: "Biometrika"
+    year: 2020
+    volume: 107
+    issue: 3
+    start: 533
+    end: 554
+    doi: "10.1093/biomet/asaa020"
+  - type: article
+    title: "Optimal covariate balancing conditions in propensity score estimation"
+    authors:
+      - given-names: Jianqing
+        family-names: Fan
+      - given-names: Kosuke
+        family-names: Imai
+      - given-names: Inbeom
+        family-names: Lee
+      - given-names: Han
+        family-names: Liu
+      - given-names: Yang
+        family-names: Ning
+      - given-names: Xiaolin
+        family-names: Yang
+    journal: "Journal of Business & Economic Statistics"
+    year: 2022
+    volume: 41
+    issue: 1
+    start: 97
+    end: 110
+    doi: "10.1080/07350015.2021.2002159"

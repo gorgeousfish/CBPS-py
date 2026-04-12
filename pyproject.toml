@@ -1,0 +1,159 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cbps-python"
+version = "0.1.0"
+description = "Covariate Balancing Propensity Score (CBPS) for causal inference in Python"
+readme = "README.md"
+license = {text = "AGPL-3.0"}
+authors = [
+    {name = "Cai Xuanyu", email = "xuanyuCAI@outlook.com"},
+    {name = "Xu Wenli", email = "wlxu@cityu.edu.mo"},
+]
+maintainers = [
+    {name = "Cai Xuanyu", email = "xuanyuCAI@outlook.com"},
+]
+keywords = [
+    "causal-inference",
+    "propensity-score",
+    "covariate-balancing",
+    "treatment-effects",
+    "observational-studies",
+    "inverse-probability-weighting",
+    "generalized-method-of-moments",
+    "doubly-robust",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Framework :: Pytest",
+    "Typing :: Typed",
+    "Operating System :: OS Independent",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.22.0",
+    "scipy>=1.8.0",
+    "pandas>=1.4.0",
+    "statsmodels>=0.13.0",
+    "patsy>=0.5.0",
+]
+
+[project.optional-dependencies]
+plots = ["matplotlib>=3.5.0"]
+sklearn = ["scikit-learn>=1.0.0"]
+hdcbps = ["glmnetforpython>=1.0.0"]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+docs = [
+    "sphinx>=5.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "sphinx-copybutton>=0.5.0",
+    "nbsphinx>=0.9.0",
+    "numpydoc>=1.5.0",
+    "myst-parser>=1.0.0",
+    "ipykernel>=6.0.0",
+]
+all = ["cbps-python[plots,sklearn,hdcbps]"]
+
+[project.urls]
+Homepage = "https://cbps-python.readthedocs.io"
+Repository = "https://github.com/gorgeousfish/cbps-python"
+Documentation = "https://cbps-python.readthedocs.io"
+Changelog = "https://github.com/gorgeousfish/cbps-python/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/gorgeousfish/cbps-python/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cbps*"]
+
+[tool.setuptools.package-data]
+cbps = [
+    "py.typed",
+    "data/*.csv",
+    "data/*.json",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312', 'py313']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+# addopts = "--cov=cbps --cov-report=term-missing --cov-report=html --cov-report=xml"
+markers = [
+    "unit: Unit tests for individual functions/classes",
+    "integration: End-to-end integration tests",
+    "slow: Slow tests (runtime > 10 seconds)",
+    "paper_reproduction: Paper reproduction tests (Imai & Ratkovic 2014, Fong 2018)",
+    "edge_case: Edge case tests (extreme probabilities, collinearity, small samples)",
+    "numerical: Numerical precision tests",
+]
+
+[tool.coverage.run]
+source = ["cbps"]
+omit = [
+    "cbps/data/*",
+    "cbps/datasets/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]
+show_missing = true
+fail_under = 80
+
+[tool.bandit]
+exclude_dirs = ["tests", "examples"]
+skips = ["B101"]
+
