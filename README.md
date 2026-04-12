@@ -10,8 +10,6 @@
 
 ![cbps](image/image.jpg)
 
-A comprehensive Python implementation of the Covariate Balancing Propensity Score (CBPS) methodology for causal inference in observational studies, faithfully porting the R package [CBPS](https://CRAN.R-project.org/package=CBPS) (v0.23) to Python.
-
 ## Overview
 
 Traditional propensity score estimation faces a fundamental challenge known as the **propensity score tautology**: researchers iterate between fitting models and checking covariate balance, yet the estimated propensity score is considered appropriate only if it achieves balance. Even slight model misspecification can result in substantial bias in treatment effect estimates.
