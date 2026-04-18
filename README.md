@@ -36,26 +36,30 @@ This dual optimization yields propensity scores that are more robust to model mi
 
 ## Installation
 
-### From PyPI
+### From GitHub
+
+> **Note:** `cbps-python` is not yet published to PyPI. For now, install
+> directly from the GitHub repository. Once the package is released,
+> `pip install cbps-python` will become the default.
 
 ```bash
-pip install cbps-python
+pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"
 ```
 
 ### With Optional Dependencies
 
 ```bash
 # High-dimensional CBPS support
-pip install 'cbps-python[hdcbps]'
+pip install "cbps-python[hdcbps] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 # Visualization tools
-pip install 'cbps-python[plots]'
+pip install "cbps-python[plots] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 # scikit-learn integration
-pip install 'cbps-python[sklearn]'
+pip install "cbps-python[sklearn] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 # All features
-pip install 'cbps-python[all]'
+pip install "cbps-python[all] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 ```
 
 ### Development Installation

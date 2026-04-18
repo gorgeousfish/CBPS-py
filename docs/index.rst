@@ -29,11 +29,12 @@ Key Innovations
 Quick Start
 -----------
 
-Install from PyPI:
+Install directly from the GitHub repository (``cbps-python`` is not yet
+on PyPI):
 
 .. code-block:: bash
 
-   pip install cbps-python
+   pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 A minimal example on the LaLonde NSW sample:
 

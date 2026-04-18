@@ -69,6 +69,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `(T/π - (1-T)/(1-π)) h_1(X) = 0` (balancing `baseline_formula`) and
   `(T/π - 1) h_2(X) = 0` (balancing `diff_formula`), with
   `h_1 ≈ E[Y(0)|X]` and `h_2 ≈ E[Y(1)-Y(0)|X]`
+- Replaced the `pip install cbps-python` instructions in `README.md`,
+  `docs/installation.rst`, `docs/index.rst` and
+  `docs/api/diagnostics.rst` with a GitHub-based install
+  (`pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"`)
+  because the package is not yet published to PyPI, and noted how to
+  switch back to the shorter PyPI form once the package is released
 
 ## [0.1.0] - 2025-12-04
 
