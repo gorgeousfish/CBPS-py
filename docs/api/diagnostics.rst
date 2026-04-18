@@ -33,10 +33,10 @@ Plotting (requires matplotlib)
 ------------------------------
 
 The plotting helpers are only imported when ``matplotlib`` is available.
-Install the ``plots`` extra — currently from GitHub while ``cbps-python``
-is not yet on PyPI — to enable them::
+Install the ``plots`` extra — currently from GitHub while ``cbps`` is
+not yet on PyPI — to enable them::
 
-   pip install "cbps-python[plots] @ git+https://github.com/gorgeousfish/CBPS-py.git"
+   pip install "cbps[plots] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 .. autofunction:: cbps.plot_cbps
 

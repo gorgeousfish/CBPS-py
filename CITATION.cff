@@ -14,7 +14,7 @@ authors:
     email: wlxu@cityu.edu.mo
     affiliation: City University of Macau
 repository-code: "https://github.com/gorgeousfish/CBPS-py"
-url: "https://cbps-python.readthedocs.io"
+url: "https://cbps.readthedocs.io"
 license: AGPL-3.0
 version: 0.1.0
 date-released: "2025-12-04"

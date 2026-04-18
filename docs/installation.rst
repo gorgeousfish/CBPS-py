@@ -6,16 +6,16 @@ Basic Installation
 
 .. note::
 
-   ``cbps-python`` has not yet been published to PyPI. For now, install
-   it directly from the GitHub repository. Once the package is released,
-   the ``pip install cbps-python`` shortcut below will work without the
-   git URL.
+   ``cbps`` has not yet been published to PyPI. For now, install it
+   directly from the GitHub repository. Once the package is released,
+   the ``pip install cbps`` shortcut below will work without the git
+   URL.
 
 The CBPS Python package can be installed with pip:
 
 .. code-block:: bash
 
-   pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"
+   pip install "cbps @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 The package requires Python 3.10 or newer. The core install pulls in the
 following runtime dependencies (lower bounds reflect the minimum versions
@@ -41,22 +41,22 @@ The package ships four user-facing extras that can be combined with the
      - Install command
      - What it adds
    * - ``plots``
-     - ``pip install "cbps-python[plots] @ git+https://github.com/gorgeousfish/CBPS-py.git"``
+     - ``pip install "cbps[plots] @ git+https://github.com/gorgeousfish/CBPS-py.git"``
      - ``matplotlib>=3.5.0`` for balance and weight-distribution plots
    * - ``sklearn``
-     - ``pip install "cbps-python[sklearn] @ git+https://github.com/gorgeousfish/CBPS-py.git"``
+     - ``pip install "cbps[sklearn] @ git+https://github.com/gorgeousfish/CBPS-py.git"``
      - ``scikit-learn>=1.0`` for the
        :class:`cbps.sklearn.CBPSEstimator` Pipeline/GridSearch-compatible
        wrapper
    * - ``hdcbps``
-     - ``pip install "cbps-python[hdcbps] @ git+https://github.com/gorgeousfish/CBPS-py.git"``
+     - ``pip install "cbps[hdcbps] @ git+https://github.com/gorgeousfish/CBPS-py.git"``
      - ``glmnetforpython>=1.0`` for the :func:`cbps.hdCBPS` LASSO backend
    * - ``all``
-     - ``pip install "cbps-python[all] @ git+https://github.com/gorgeousfish/CBPS-py.git"``
+     - ``pip install "cbps[all] @ git+https://github.com/gorgeousfish/CBPS-py.git"``
      - ``plots`` + ``sklearn`` + ``hdcbps`` (no development tooling)
 
-Once ``cbps-python`` is published to PyPI, replace the
-``"...[extra] @ git+..."`` syntax with the shorter ``'cbps-python[extra]'``
+Once ``cbps`` is published to PyPI, replace the
+``"...[extra] @ git+..."`` syntax with the shorter ``'cbps[extra]'``
 form.
 
 Extras for contributors (``dev``, ``test``, ``docs``) are documented in
@@ -200,12 +200,13 @@ Troubleshooting
 
 **Problem:** ``ImportError: cannot import name 'CBPS'``
 
-**Solution:** Make sure you installed ``cbps-python``, not ``cbps``:
+**Solution:** Make sure you installed the ``cbps`` distribution (import
+name ``cbps``), not some other package that happens to share the same
+import name:
 
 .. code-block:: bash
 
-   pip uninstall cbps  # Remove wrong package
-   pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"  # Install correct package
+   pip install "cbps @ git+https://github.com/gorgeousfish/CBPS-py.git"  # Install correct package
 
 Upgrading
 ---------
@@ -215,10 +216,10 @@ To upgrade to the latest version on GitHub:
 .. code-block:: bash
 
    pip install --upgrade --force-reinstall \
-       "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"
+       "cbps @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
-After ``cbps-python`` is published to PyPI, the shorter form
-``pip install --upgrade cbps-python`` will take over.
+After ``cbps`` is published to PyPI, the shorter form
+``pip install --upgrade cbps`` will take over.
 
 Uninstallation
 --------------
@@ -227,7 +228,7 @@ To uninstall the package:
 
 .. code-block:: bash
 
-   pip uninstall cbps-python
+   pip uninstall cbps
 
 Next Steps
 ----------

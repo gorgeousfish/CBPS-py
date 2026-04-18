@@ -17,6 +17,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rewrote `examples/README.md` and `docs/tutorials/index.rst` to reflect the
   three replication notebooks actually shipped with the package
   (Imai & Ratkovic 2014/2015, Fong, Hazlett & Imai 2018)
+- Renamed the Python distribution from `cbps-python` to `cbps` to match
+  the import name, the `CITATION.cff` title and the Read the Docs slug.
+  Concretely:
+  * `pyproject.toml`: `name = "cbps"`, `all = ["cbps[plots,sklearn,hdcbps]"]`,
+    `Homepage`/`Documentation` URLs now point at `https://cbps.readthedocs.io`
+  * `CITATION.cff`: `url` now points at `https://cbps.readthedocs.io`
+  * `README.md`, `docs/installation.rst`, `docs/index.rst`,
+    `docs/api/diagnostics.rst`, `examples/README.md`, `CONTRIBUTING.md`,
+    `.github/ISSUE_TEMPLATE/config.yml`: every `cbps-python` install
+    command, `cbps-python.readthedocs.io` URL, and `pypi.org/project/cbps-python/`
+    link has been rewritten to use the new name
+  * PyPI version badge URL in `README.md` updated to
+    `img.shields.io/pypi/v/cbps.svg` (still commented out pending the
+    first PyPI release)
+
+  PyPI verified that `cbps` is currently unclaimed; it should be
+  reserved with the first `0.1.x` release.
 
 ### Added
 - mypy hook in pre-commit configuration
@@ -69,14 +86,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `(T/π - (1-T)/(1-π)) h_1(X) = 0` (balancing `baseline_formula`) and
   `(T/π - 1) h_2(X) = 0` (balancing `diff_formula`), with
   `h_1 ≈ E[Y(0)|X]` and `h_2 ≈ E[Y(1)-Y(0)|X]`
-- Replaced the `pip install cbps-python` instructions in `README.md`,
+- Replaced the `pip install` instructions in `README.md`,
   `docs/installation.rst`, `docs/index.rst` and
   `docs/api/diagnostics.rst` with a GitHub-based install
-  (`pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"`)
+  (`pip install "cbps @ git+https://github.com/gorgeousfish/CBPS-py.git"`)
   because the package is not yet published to PyPI, and noted how to
   switch back to the shorter PyPI form once the package is released
 - Commented out the PyPI version badge in `README.md` (wrapped in an
-  HTML comment with a restore hint) because `cbps-python` is not yet
+  HTML comment with a restore hint) because `cbps` is not yet
   published to PyPI and the badge was rendering as a broken
   "package not found" image
 - Fixed Read the Docs build failure under

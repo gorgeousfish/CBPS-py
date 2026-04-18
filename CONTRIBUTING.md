@@ -274,7 +274,7 @@ def test_cbps_matches_r():
 
 - **Questions**: Open a [GitHub Discussion](https://github.com/gorgeousfish/CBPS-py/discussions) or Issue
 - **Bug Reports**: Use [GitHub Issues](https://github.com/gorgeousfish/CBPS-py/issues)
-- **Documentation**: See [https://cbps-python.readthedocs.io](https://cbps-python.readthedocs.io)
+- **Documentation**: See [https://cbps.readthedocs.io](https://cbps.readthedocs.io)
 
 ## Maintainers
 

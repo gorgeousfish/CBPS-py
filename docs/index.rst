@@ -29,12 +29,12 @@ Key Innovations
 Quick Start
 -----------
 
-Install directly from the GitHub repository (``cbps-python`` is not yet
-on PyPI):
+Install directly from the GitHub repository (``cbps`` is not yet on
+PyPI):
 
 .. code-block:: bash
 
-   pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"
+   pip install "cbps @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 A minimal example on the LaLonde NSW sample:
 
@@ -96,7 +96,7 @@ hdCBPS, CBIV, oCBPS), and the paper-replication notebooks, see
 
    GitHub Repository <https://github.com/gorgeousfish/CBPS-py>
    Issue Tracker <https://github.com/gorgeousfish/CBPS-py/issues>
-   Documentation <https://cbps-python.readthedocs.io>
+   Documentation <https://cbps.readthedocs.io>
 
 Indices and Tables
 ==================

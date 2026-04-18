@@ -2,13 +2,13 @@
 
 **Covariate Balancing Propensity Score for Python**
 
-<!-- PyPI badge disabled until cbps-python is published to PyPI.
+<!-- PyPI badge disabled until cbps is published to PyPI.
      Uncomment the next line after the first PyPI release:
-[![PyPI version](https://img.shields.io/pypi/v/cbps-python.svg)](https://pypi.org/project/cbps-python/)
+[![PyPI version](https://img.shields.io/pypi/v/cbps.svg)](https://pypi.org/project/cbps/)
 -->
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Documentation Status](https://readthedocs.org/projects/cbps-python/badge/?version=latest)](https://cbps-python.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/cbps/badge/?version=latest)](https://cbps.readthedocs.io/en/latest/?badge=latest)
 [![CITATION.cff](https://img.shields.io/badge/citation-cff-blue.svg)](CITATION.cff)
 
 ![cbps](image/image.jpg)
@@ -41,28 +41,28 @@ This dual optimization yields propensity scores that are more robust to model mi
 
 ### From GitHub
 
-> **Note:** `cbps-python` is not yet published to PyPI. For now, install
+> **Note:** `cbps` is not yet published to PyPI. For now, install
 > directly from the GitHub repository. Once the package is released,
-> `pip install cbps-python` will become the default.
+> `pip install cbps` will become the default.
 
 ```bash
-pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"
+pip install "cbps @ git+https://github.com/gorgeousfish/CBPS-py.git"
 ```
 
 ### With Optional Dependencies
 
 ```bash
 # High-dimensional CBPS support
-pip install "cbps-python[hdcbps] @ git+https://github.com/gorgeousfish/CBPS-py.git"
+pip install "cbps[hdcbps] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 # Visualization tools
-pip install "cbps-python[plots] @ git+https://github.com/gorgeousfish/CBPS-py.git"
+pip install "cbps[plots] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 # scikit-learn integration
-pip install "cbps-python[sklearn] @ git+https://github.com/gorgeousfish/CBPS-py.git"
+pip install "cbps[sklearn] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 
 # All features
-pip install "cbps-python[all] @ git+https://github.com/gorgeousfish/CBPS-py.git"
+pip install "cbps[all] @ git+https://github.com/gorgeousfish/CBPS-py.git"
 ```
 
 ### Development Installation
@@ -88,7 +88,7 @@ pip install -e ".[dev]"
 > git clone https://github.com/thierrymoudiki/glmnetforpython.git
 > pip install -e ./glmnetforpython
 > ```
-> See the [`Installation` section of the docs](https://cbps-python.readthedocs.io/en/latest/installation.html#requirements-for-hdcbps) for the same steps with extra troubleshooting tips.
+> See the [`Installation` section of the docs](https://cbps.readthedocs.io/en/latest/installation.html#requirements-for-hdcbps) for the same steps with extra troubleshooting tips.
 
 ## Quick Start
 

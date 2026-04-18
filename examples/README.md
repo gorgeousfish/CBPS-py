@@ -116,10 +116,10 @@ No external data files are required.
 
 ## Documentation
 
-- **Online documentation**: <https://cbps-python.readthedocs.io>
+- **Online documentation**: <https://cbps.readthedocs.io>
 - **Top-level README**: [`../README.md`](../README.md)
 - **API reference**: built from source docstrings under `docs/api/` and
-  rendered at <https://cbps-python.readthedocs.io>.
+  rendered at <https://cbps.readthedocs.io>.
 
 ## License
 

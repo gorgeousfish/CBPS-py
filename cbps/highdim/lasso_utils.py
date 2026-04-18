@@ -151,7 +151,7 @@ def cv_glmnet(
             "hdCBPS requires glmnetforpython for numerical precision.\n"
             "\n"
             "Install with:\n"
-            "  pip install 'cbps-python[hdcbps]'  # Recommended\n"
+            "  pip install 'cbps[hdcbps]'  # Recommended\n"
             "  # OR\n"
             "  pip install glmnetforpython  # Manual installation\n"
             "\n"
