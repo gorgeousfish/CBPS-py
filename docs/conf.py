@@ -74,6 +74,23 @@ autodoc_default_options = {
     'exclude-members': '__weakref__'
 }
 
+# Mock optional dependencies that are difficult to install on Read the Docs.
+# Sphinx autodoc will replace these with stub modules, so it can still import
+# any cbps submodule that imports them at module level without raising
+# ImportError (which would otherwise be promoted to a build failure by the
+# ``-W`` / ``fail_on_warning: true`` flag in ``.readthedocs.yaml``).
+#
+# - ``glmnetforpython`` ships a Fortran extension and has no PyPI wheel for
+#   the RTD Linux x86_64 builder; ``cbps.highdim.lasso_utils`` already
+#   handles it via ``HAS_GLMNETFORPYTHON``, but mocking is a belt-and-braces
+#   guarantee.
+# - ``rpy2`` is only used by an optional ``cv_glmnet_via_r`` validation
+#   helper in ``cbps.highdim.lasso_utils`` and is not part of the public API.
+autodoc_mock_imports = [
+    'glmnetforpython',
+    'rpy2',
+]
+
 # numpydoc settings
 numpydoc_show_class_members = False  # Suppress autosummary stub warnings
 

@@ -79,6 +79,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   HTML comment with a restore hint) because `cbps-python` is not yet
   published to PyPI and the badge was rendering as a broken
   "package not found" image
+- Fixed Read the Docs build failure under
+  `sphinx -W --keep-going` (`fail_on_warning: true`): the build was
+  failing because Sphinx autodoc could not import
+  `cbps.sklearn.CBPSEstimator` (RTD only installed the `[docs]` extra,
+  so `scikit-learn` was missing and the unguarded
+  `from sklearn.base import ...` in `cbps/sklearn/estimator.py` raised
+  `ImportError`, which the autosummary logic surfaced as a warning).
+  Two complementary fixes:
+  * `.readthedocs.yaml` now installs the `sklearn` and `plots` extras
+    in addition to `docs`, so `cbps.sklearn.CBPSEstimator` and the
+    `cbps.diagnostics.plots` helpers render with their real signatures
+  * `docs/conf.py` declares
+    `autodoc_mock_imports = ['glmnetforpython', 'rpy2']` so RTD does not
+    need a Fortran toolchain to build documentation for `cbps.hdCBPS`
+    or the optional rpy2-backed validation helper
 
 ## [0.1.0] - 2025-12-04
 
