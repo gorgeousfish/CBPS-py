@@ -10,22 +10,48 @@ The CBPS Python package can be installed using pip:
 
    pip install cbps-python
 
-This will install the core package with all required dependencies:
+The package requires Python 3.10 or newer. The core install pulls in the
+following runtime dependencies (lower bounds reflect the minimum versions
+tested, no upper bounds are pinned):
 
-- numpy >= 1.20.0
-- scipy >= 1.7.0
-- pandas >= 1.3.0
+- numpy >= 1.22.0
+- scipy >= 1.8.0
+- pandas >= 1.4.0
 - statsmodels >= 0.13.0
-- numdifftools >= 0.9.0
 - patsy >= 0.5.0
 
-For visualization features (diagnostic plots), install with:
+Optional Feature Extras
+-----------------------
 
-.. code-block:: bash
+The package ships four user-facing extras that can be combined with the
+``pip install`` command:
 
-   pip install 'cbps-python[plots]'
+.. list-table::
+   :header-rows: 1
+   :widths: 22 38 40
 
-This adds matplotlib >= 3.4.0 for balance plots and weight distribution visualization.
+   * - Extra
+     - Install command
+     - What it adds
+   * - ``plots``
+     - ``pip install 'cbps-python[plots]'``
+     - ``matplotlib>=3.5.0`` for balance and weight-distribution plots
+   * - ``sklearn``
+     - ``pip install 'cbps-python[sklearn]'``
+     - ``scikit-learn>=1.0`` for the
+       :class:`cbps.sklearn.CBPSEstimator` Pipeline/GridSearch-compatible
+       wrapper
+   * - ``hdcbps``
+     - ``pip install 'cbps-python[hdcbps]'``
+     - ``glmnetforpython>=1.0`` for the :func:`cbps.hdCBPS` LASSO backend
+   * - ``all``
+     - ``pip install 'cbps-python[all]'``
+     - ``plots`` + ``sklearn`` + ``hdcbps`` (no development tooling)
+
+Extras for contributors (``dev``, ``test``, ``docs``) are documented in
+`pyproject.toml`_.
+
+.. _pyproject.toml: https://github.com/gorgeousfish/CBPS-py/blob/main/pyproject.toml
 
 Requirements for hdCBPS
 -----------------------
@@ -43,7 +69,11 @@ If you plan to use high-dimensional CBPS (``hdCBPS``), you need to install the `
 Apple Silicon (M1/M2/M3) Installation
 --------------------------------------
 
-On Apple Silicon Macs, ``glmnetforpython`` requires a Fortran compiler. Follow these steps:
+``glmnetforpython`` ships a compiled Fortran extension. On Apple Silicon,
+PyPI often provides a matching pre-built wheel, in which case
+``pip install glmnetforpython`` just works. The steps below apply when the
+wheel is unavailable for your Python / macOS combination and pip falls back
+to a source build.
 
 1. Install Homebrew (if not already installed):
 
@@ -51,33 +81,43 @@ On Apple Silicon Macs, ``glmnetforpython`` requires a Fortran compiler. Follow t
 
       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-2. Install GCC (includes gfortran):
+2. Install GCC (which ships with ``gfortran``):
 
    .. code-block:: bash
 
       brew install gcc
 
-3. Set the Fortran compiler environment variable:
+3. Set the Fortran compiler environment variable in the current shell:
 
    .. code-block:: bash
 
       export FC=gfortran
 
-4. Install glmnetforpython:
+4. Install the package. This is the same command as the non-ARM case; the
+   environment variable tells pip which Fortran compiler to use:
 
    .. code-block:: bash
 
       pip install glmnetforpython
 
-5. Verify installation:
+5. If PyPI still cannot build a wheel for your environment, install the
+   package from source:
+
+   .. code-block:: bash
+
+      git clone https://github.com/thierrymoudiki/glmnetforpython.git
+      pip install -e ./glmnetforpython
+
+6. Verify the installation:
 
    .. code-block:: python
 
-      import glmnet
+      import glmnetforpython
       print("glmnetforpython installed successfully!")
 
 .. tip::
-   Add ``export FC=gfortran`` to your ``~/.zshrc`` or ``~/.bash_profile`` to make it permanent.
+   Add ``export FC=gfortran`` to your ``~/.zshrc`` or ``~/.bash_profile`` so
+   the variable is available in new shells.
 
 Development Installation
 ------------------------
@@ -88,8 +128,8 @@ To install the package in development mode (for contributing or testing):
 
    .. code-block:: bash
 
-      git clone https://github.com/gorgeousfish/cbps-python.git
-      cd cbps-python
+      git clone https://github.com/gorgeousfish/CBPS-py.git
+      cd CBPS-py
 
 2. Install in editable mode with development dependencies:
 
@@ -135,7 +175,7 @@ Expected output:
 Troubleshooting
 ---------------
 
-**Problem:** ``ModuleNotFoundError: No module named 'glmnet'`` when using ``hdCBPS``
+**Problem:** ``ModuleNotFoundError: No module named 'glmnetforpython'`` when using ``hdCBPS``
 
 **Solution:** Install glmnetforpython:
 
@@ -178,6 +218,6 @@ Next Steps
 ----------
 
 - See :doc:`quickstart` for a quick introduction
-- See :doc:`tutorials/index` for comprehensive tutorials
-- See :doc:`api/index` for API reference
+- See :doc:`tutorials/index` for the three replication tutorials
+- See :doc:`api/index` for the full API reference generated from the source docstrings
 

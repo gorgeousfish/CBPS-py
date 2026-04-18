@@ -42,8 +42,8 @@ Association, 110(511), 1013-1023. https://doi.org/10.1080/01621459.2014.956872
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, Tuple, Optional
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -84,7 +84,7 @@ class CBMSMSummary:
     J : float
         Hansen J-statistic.
     weights : np.ndarray
-        Propensity score weights P(T|X).
+        Inverse probability weights 1/P(T|X) aggregated across time periods.
     fitted_values : np.ndarray
         Stabilized MSM weights P(T)/P(T|X).
     coefficients : np.ndarray
@@ -129,8 +129,13 @@ class CBMSMSummary:
         output += f"Convergence: {'Yes' if self.converged else 'No'}\n"
         output += f"J-statistic: {self.J:.6f}\n\n"
 
-        # Propensity score summary P(T|X)
-        output += "Propensity Scores P(T|X) Summary:\n"
+        # Inverse probability weights summary (1/P(T|X))
+        # NOTE: ``self.weights`` holds aggregated inverse probability weights
+        # 1/P(T|X), not the propensity scores themselves. The previous label
+        # ("Propensity Scores P(T|X)") was misleading because the reported
+        # min/max/mean can easily exceed 1 (e.g. small propensities inflate
+        # 1/P to tens or hundreds), which is impossible for probabilities.
+        output += "Inverse Probability Weights (1/P(T|X)) Summary:\n"
         output += "-"*70 + "\n"
         weights = np.array(self.weights)
         output += f"  Min:    {np.min(weights):.6f}\n"
@@ -300,7 +305,13 @@ class CBMSMResults:
     time: np.ndarray
     model: Any
     data: Any
-    
+
+    # Optional covariate names extracted from the formula's design matrix
+    # (excluding the intercept column). Set by the formula interface for
+    # readable ``balance()`` row labels; ``None`` when the matrix interface
+    # is used and the caller did not supply names.
+    covariate_names: Optional[List[str]] = None
+
     def __repr__(self) -> str:
         """Concise repr output for interactive environments."""
         converged_str = "Yes" if self.converged else "No"
@@ -448,73 +459,89 @@ class CBMSMResults:
         # Get first-period data indices
         first_time_idx = (self.time == first_time)
         X_first = self.x[first_time_idx, :]  # First-period covariate matrix (observation-level)
-        
-        # 3. Initialize balance matrices
-        n_covars = self.x.shape[1] - 1  # Covariates excluding intercept
+
+        # 3. Intercept detection: ``self.x`` may or may not carry an intercept
+        # column depending on how the fit was built. The formula interface
+        # filters out the constant-valued intercept during zero-variance
+        # pruning, whereas the matrix interface can receive a user-supplied
+        # design matrix that already includes a leading column of 1s. We
+        # detect the situation rather than hard-coding an offset so that
+        # every covariate is reported exactly once and never silently dropped.
+        if X_first.shape[1] > 0 and np.allclose(X_first[:, 0], 1.0):
+            covar_start = 1
+        else:
+            covar_start = 0
+        n_covars = self.x.shape[1] - covar_start
+
         bal = np.full((n_covars, n_unique * 2), np.nan)
         baseline = np.full((n_covars, n_unique * 2), np.nan)
-        
+
         # 4. Compute balance statistics for each treatment history and covariate
         # Note: treat_hist_fac is unit-level (N units), needs mapping to observation-level
         unique_ids = np.unique(self.id)
         id_to_treathist = dict(zip(unique_ids, treat_hist_fac))
-        
+
         # For each first-period observation, get its corresponding treatment history
         id_first = self.id[first_time_idx]
         treat_hist_fac_first = np.array([id_to_treathist[uid] for uid in id_first])
-        
+
+        # Expand unit-level weights to observation-level once (constant across j)
+        id_to_weight = dict(zip(unique_ids, self.weights))
+        id_to_glm_weight = dict(zip(unique_ids, self.glm_weights))
+        w_first = np.array([id_to_weight[uid] for uid in id_first])
+        glm_w_first = np.array([id_to_glm_weight[uid] for uid in id_first])
+
         for i, th in enumerate(unique_treat_hist):
             # Find first-period observations with this treatment history
             obs_mask = (treat_hist_fac_first == th)
-            
-            for j in range(1, self.x.shape[1]):  # Skip intercept column (j=0)
+
+            for j in range(covar_start, self.x.shape[1]):
                 # Get first-period covariate values and weights
+                idx = j - covar_start
                 X_col_first = X_first[:, j]
-                
-                # Expand unit-level weights to observation-level (first period)
-                w_unit = self.weights  # unit-level
-                id_to_weight = dict(zip(unique_ids, w_unit))
-                w_first = np.array([id_to_weight[uid] for uid in id_first])
-                
-                # GLM weights are also unit-level, need expansion
-                glm_w_unit = self.glm_weights  # unit-level
-                id_to_glm_weight = dict(zip(unique_ids, glm_w_unit))
-                glm_w_first = np.array([id_to_glm_weight[uid] for uid in id_first])
-                
+
                 # Compute weighted mean
                 numerator = np.sum(obs_mask * X_col_first * w_first)
                 denominator = np.sum(w_first * obs_mask)
-                bal[j-1, i] = numerator / denominator if denominator > 0 else 0.0
-                
+                bal[idx, i] = numerator / denominator if denominator > 0 else 0.0
+
                 # Standardized mean
                 weighted_X_std = np.std(w_first * X_col_first, ddof=1)
-                bal[j-1, i + n_unique] = bal[j-1, i] / weighted_X_std if weighted_X_std > 0 else 0.0
-                
+                bal[idx, i + n_unique] = bal[idx, i] / weighted_X_std if weighted_X_std > 0 else 0.0
+
                 # Unweighted (GLM) mean
                 numerator_glm = np.sum(obs_mask * X_col_first * glm_w_first)
                 denominator_glm = np.sum(glm_w_first * obs_mask)
-                baseline[j-1, i] = numerator_glm / denominator_glm if denominator_glm > 0 else 0.0
-                
+                baseline[idx, i] = numerator_glm / denominator_glm if denominator_glm > 0 else 0.0
+
                 # Unweighted standardized mean
                 glm_weighted_X_std = np.std(glm_w_first * X_col_first, ddof=1)
-                baseline[j-1, i + n_unique] = baseline[j-1, i] / glm_weighted_X_std if glm_weighted_X_std > 0 else 0.0
-        
+                baseline[idx, i + n_unique] = baseline[idx, i] / glm_weighted_X_std if glm_weighted_X_std > 0 else 0.0
+
         # 5. Set NA values to 0
         bal[np.isnan(bal)] = 0.0
         baseline[np.isnan(baseline)] = 0.0
-        
+
         # 6. Set column names
         cnames = []
         for th in unique_treat_hist:
             cnames.append(f"{th}.mean")
         for th in unique_treat_hist:
             cnames.append(f"{th}.std.mean")
-        
-        # 7. Set row names (covariate names, excluding intercept)
-        if hasattr(self, 'covariate_names') and self.covariate_names is not None:
-            rnames = [name for name in self.covariate_names if name != '(Intercept)']
-        else:
-            rnames = [f"X{i}" for i in range(1, self.x.shape[1])]
+
+        # 7. Set row names. Prefer the design-matrix labels attached by the
+        # formula interface (e.g. ``d.gone.neg.l1``). If the stored labels do
+        # not line up with the retained covariate columns (length mismatch
+        # after zero-variance pruning), fall back to generic placeholders so
+        # downstream code never sees a label/row-count desync.
+        rnames = None
+        if getattr(self, "covariate_names", None) is not None:
+            candidate = [name for name in self.covariate_names
+                         if name not in ("(Intercept)", "Intercept")]
+            if len(candidate) == n_covars:
+                rnames = candidate
+        if rnames is None:
+            rnames = [f"X{i + 1}" for i in range(n_covars)]
         
         # 8. Compute StatBal statistic
         # sum((bal - bal[,1]) * (bal != 0)^2)
@@ -1361,7 +1388,11 @@ def CBMSM(
     ----------
     formula : str
         Model specification in Patsy format, e.g., ``"treat ~ x1 + x2"``.
-        The same formula applies to all time periods.
+        The same formula applies to all time periods. Column names that
+        contain special characters such as ``.`` (e.g. ``d.gone.neg``) are
+        automatically wrapped in ``Q("...")`` internally so that patsy does
+        not interpret them as attribute access; you can therefore use the R
+        CBPS-style names directly.
     id : str or array-like
         Unit (individual) identifiers. Either a column name in ``data``
         or an array of length n.
@@ -1504,6 +1535,23 @@ def CBMSM(
     from patsy import dmatrices
     _, X_design = dmatrices(safe_formula, data, return_type='dataframe')
     terms_obj = X_design.design_info
+
+    # Recover readable covariate labels from the design matrix column names.
+    # ``_quote_formula_variables`` wraps names with special characters (e.g.
+    # ``d.gone.neg.l1``) in ``Q("...")`` for patsy; we strip that wrapper so
+    # downstream diagnostics such as :meth:`CBMSMResults.balance` can print
+    # the original variable names rather than ``X1, X2, ...`` placeholders.
+    _Q_PATTERN = re.compile(r'^Q\(["\'](.*)["\']\)$')
+
+    def _clean_patsy_name(name: str) -> str:
+        m = _Q_PATTERN.match(name)
+        return m.group(1) if m is not None else name
+
+    covariate_labels = [
+        _clean_patsy_name(c)
+        for c in terms_obj.column_names
+        if c not in ("Intercept", "(Intercept)")
+    ]
 
     # Formula parsing (generates y, X matrices, parse_formula includes intercept)
     y_raw, X_raw = parse_formula(safe_formula, data)
@@ -1789,6 +1837,7 @@ def CBMSM(
         # Model frame construction
         model=data_original,  # Use original data as model frame
         data=data_original,  # Use saved original data
+        covariate_names=covariate_labels,  # Patsy design-matrix labels
     )
 
     # Final override to first-period subset

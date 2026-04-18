@@ -1,118 +1,88 @@
 Tutorials
 =========
 
-This section contains comprehensive step-by-step tutorials covering all major CBPS functionality.
-Each tutorial is provided as an interactive Jupyter Notebook with complete code examples,
-visualizations, and detailed explanations.
+This section contains step-by-step replications of the three core CBPS
+methodology papers. Each tutorial is provided as an interactive Jupyter
+notebook in the ``examples/`` directory, together with an equivalent
+standalone Python script.
 
 .. note::
-   All tutorials are available as Jupyter Notebooks in the ``examples/`` directory.
-   You can download and run them locally to experiment with the code.
+   Monte Carlo portions of these notebooks use a reduced number of replications
+   so that the full notebook executes in a few minutes. Qualitative rankings
+   across estimators should match the published figures; exact numerical
+   agreement is not expected.
 
 Tutorial Overview
 -----------------
 
-We provide 4 comprehensive tutorials covering different aspects of CBPS:
-
-1. **Binary Treatment CBPS** - Basic propensity score estimation for binary treatments
-2. **Continuous Treatment CBPS** - Generalized propensity score for continuous treatments
-3. **Marginal Structural Models** - Longitudinal data with time-varying treatments
-4. **High-Dimensional CBPS** - LASSO variable selection for high-dimensional settings
+1. **Binary and Multi-Valued CBPS** — Kang-Schafer simulation and LaLonde
+   propensity-score matching (Imai & Ratkovic, 2014).
+2. **Continuous Treatment CBPS** — DGP simulation study and political ads
+   application (Fong, Hazlett & Imai, 2018).
+3. **Marginal Structural Models (CBMSM)** — Blackwell longitudinal data
+   (Imai & Ratkovic, 2015).
 
 Tutorial 1: Binary Treatment CBPS
 ----------------------------------
 
-**File:** ``examples/tutorial_binary.ipynb``
+**Files:** ``examples/replicate_imai_ratkovic_2014.ipynb`` and
+``examples/replicate_imai_ratkovic_2014.py``.
 
-**Dataset:** LaLonde (445 observations)
+**Datasets:** Kang-Schafer (2007) simulation DGP and the LaLonde-PSID
+combined sample (:func:`cbps.datasets.load_lalonde_psid_combined`).
 
 **Topics covered:**
 
-- Data loading and exploration
-- ATT vs. ATE estimation
-- Method comparison (exact vs. over-identified GMM)
-- Covariate balance assessment
-- Weight distribution visualization
-- Treatment effect estimation with AsyVar
-
-**Learning outcomes:**
-
-- Understand the difference between ATT and ATE
-- Learn how to assess covariate balance
-- Interpret J-statistics and convergence diagnostics
-- Estimate treatment effects with proper variance adjustment
+- Implementing the four-scenario Kang-Schafer simulation (both correct,
+  PS correct, outcome correct, both wrong).
+- Downstream estimators: Horvitz-Thompson, Hájek IPW, WLS, doubly-robust.
+- CBPS with ``method='exact'`` (just-identified GMM) and ``method='over'``
+  (over-identified GMM with J-statistic).
+- Matching using CBPS propensity scores on the LaLonde-PSID sample.
 
 Tutorial 2: Continuous Treatment CBPS
 --------------------------------------
 
-**File:** ``examples/tutorial_continuous.ipynb``
+**Files:** ``examples/replicate_fong_hazlett_imai_2018.ipynb`` and
+``examples/replicate_fong_hazlett_imai_2018.py``.
 
-**Dataset:** Political ads data (16,265 observations)
+**Datasets:** Four-DGP simulation from Section 4 of the paper and the Urban &
+Niebler (2014) political advertising data
+(:func:`cbps.datasets.load_political_ads`).
 
 **Topics covered:**
 
-- Continuous treatment variable exploration
-- Generalized Propensity Score (GPS) estimation
-- Covariate balance using correlations 
-- GPS weight distribution and effective sample size
-- Outcome regression with GPS weights
-- Dose-response curve analysis
-
-**Learning outcomes:**
-
-- Understand GPS vs. binary propensity scores
-- Learn balance metrics for continuous treatments
-- Estimate dose-response relationships
-- Use robust variance estimation for weighted regression
+- Generalized propensity score (GPS) estimation with a continuous treatment.
+- Parametric CBGPS via :func:`cbps.CBPS` and nonparametric CBGPS via
+  :func:`cbps.npCBPS`.
+- Weighted correlations between covariates and treatment as the primary
+  balance diagnostic.
+- The F-statistic from regressing treatment on covariates under the
+  estimated weights (target well below 1 after weighting).
+- Box-Cox transformed treatment and the signed correlation table for the
+  political advertising application.
 
 Tutorial 3: Marginal Structural Models (CBMSM)
 -----------------------------------------------
 
-**File:** ``examples/tutorial_msm.ipynb``
+**Files:** ``examples/replicate_imai_ratkovic_2015.ipynb`` and
+``examples/replicate_imai_ratkovic_2015.py``.
 
-**Dataset:** Blackwell longitudinal data (570 observations, 5 time periods)
-
-**Topics covered:**
-
-- Longitudinal data structure exploration
-- Time-varying vs. time-invariant treatment models
-- MSM weight estimation with CBMSM
-- Propensity score behavior across time periods
-- MSM weights examination by period
-
-**Learning outcomes:**
-
-- Understand marginal structural models for longitudinal data
-- Learn the difference between time-varying and time-invariant models
-
-Tutorial 4: High-Dimensional CBPS (hdCBPS)
--------------------------------------------
-
-**File:** ``examples/tutorial_hdcbps.ipynb``
-
-**Dataset:** Simulated high-dimensional data (p=100, n=200)
+**Dataset:** Blackwell (2013) longitudinal political campaign data across
+five time periods (:func:`cbps.datasets.load_blackwell`).
 
 **Topics covered:**
 
-- High-dimensional data simulation (p >> n)
-- Why standard CBPS fails in high dimensions
-- LASSO variable selection with cross-validation
-- Variable selection accuracy metrics (precision/recall/F1)
-- Propensity score estimation and validation
-- Balance assessment for selected variables
-- Effective sample size calculation
-
-**Learning outcomes:**
-
-- Understand when to use hdCBPS (p ≈ n or p >> n)
-- Learn LASSO variable selection for propensity scores
-- Assess variable selection accuracy
-- Ensure reproducibility with random seed control
+- Marginal structural models for panel data with time-varying treatments.
+- Time-invariant (``time_vary=False``) and time-varying
+  (``time_vary=True``) parameter specifications.
+- Stabilized CBPS weights versus GLM-based stabilized weights.
+- Propensity score behaviour across time periods.
 
 Running the Tutorials
 ----------------------
 
-To run the tutorials locally:
+To run the notebooks locally:
 
 1. Install Jupyter:
 
@@ -120,34 +90,33 @@ To run the tutorials locally:
 
       pip install jupyter
 
-2. Navigate to the examples directory:
+2. From the root of the cloned repository, start Jupyter:
 
    .. code-block:: bash
 
-      cd CBPS_python/examples
+      jupyter notebook examples/
 
-3. Start Jupyter Notebook:
+3. Open any of the ``replicate_*.ipynb`` files.
 
-   .. code-block:: bash
+Alternatively, the equivalent ``.py`` scripts can be executed directly:
 
-      jupyter notebook
+.. code-block:: bash
 
-4. Open any tutorial file (e.g., ``tutorial_binary.ipynb``)
+   python examples/replicate_imai_ratkovic_2014.py
+   python examples/replicate_fong_hazlett_imai_2018.py
+   python examples/replicate_imai_ratkovic_2015.py
 
-Additional Examples
--------------------
+A self-contained runner for the Kang-Schafer simulation portion of the
+2014 replication is available as ``examples/run_replication.py``.
 
-For focused examples demonstrating specific functionality, see the Python scripts
-in the ``examples/`` directory. These include:
+Additional Worked Examples
+--------------------------
 
-- ``cbps_basic.py`` - Basic CBPS usage
-- ``cbmsm_basic.py`` - Marginal structural models
-- ``npcbps_basic.py`` - Nonparametric CBPS
-- ``hdcbps_basic.py`` - High-dimensional CBPS
-- ``cbiv_basic.py`` - Instrumental variables
-- ``balance_basic.py`` - Balance diagnostics
-- ``plot_cbps.py`` - Visualization
-- And more...
+For focused code patterns covering each function of the package — binary and
+continuous CBPS, CBMSM, CBIV, npCBPS, hdCBPS, balance diagnostics, and
+asymptotic variance estimation — refer to:
 
-See the ``examples/README.md`` file for a complete list.
+- The :doc:`../quickstart` guide.
+- The :doc:`../advanced_usage` guide.
+- The :doc:`../api/index` reference generated from the source docstrings.
 

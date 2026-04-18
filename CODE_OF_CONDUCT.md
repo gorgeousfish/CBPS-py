@@ -61,8 +61,8 @@ representative at an online or offline event.
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at:
 
-* **Cai Xuanyu**: xuanyuCAI@outlook.com
-* **Xu Wenli**: wlxu@cityu.edu.mo
+* **Xuanyu Cai**: xuanyuCAI@outlook.com
+* **Wenli Xu**: wlxu@cityu.edu.mo
 
 All complaints will be reviewed and investigated promptly and fairly.
 

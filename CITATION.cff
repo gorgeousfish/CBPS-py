@@ -17,7 +17,7 @@ repository-code: "https://github.com/gorgeousfish/CBPS-py"
 url: "https://cbps-python.readthedocs.io"
 license: AGPL-3.0
 version: 0.1.0
-date-released: "2026-02-16"
+date-released: "2025-12-04"
 keywords:
   - causal-inference
   - propensity-score

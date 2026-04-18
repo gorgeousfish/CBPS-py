@@ -50,10 +50,13 @@ Key Features
   selection and valid post-selection inference [3]_
 
 * **Nonparametric Estimation**: Empirical likelihood methods that completely
-  avoid parametric modeling assumptions about the propensity score [4]_
+  avoid parametric modeling assumptions about the propensity score [2]_
 
 * **Longitudinal Data**: Marginal structural models for time-varying treatments
-  with time-dependent confounding, extending causal inference to complex study designs [5]_
+  with time-dependent confounding, extending causal inference to complex study designs [4]_
+
+* **Optimal / Doubly-Robust CBPS**: Efficiency-bound balancing conditions with
+  closed-form sandwich variance for the ATE [5]_
 
 * **Instrumental Variables**: Comprehensive support for treatment noncompliance
   and instrumental variable assignment scenarios [6]_
@@ -87,22 +90,25 @@ References
    via a high-dimensional covariate balancing propensity score. Biometrika 107(3),
    533-554. https://doi.org/10.1093/biomet/asaa020
 
-.. [4] Fong, C., Hazlett, C., and Imai, K. (2018). Covariate balancing propensity
-   score for general treatment regimes. Journal of the American Statistical
-   Association 113(523), 1316-1329. https://doi.org/10.1080/01621459.2017.1385465
-
-.. [5] Imai, K. and Ratkovic, M. (2015). Robust estimation of inverse probability
+.. [4] Imai, K. and Ratkovic, M. (2015). Robust estimation of inverse probability
    weights for marginal structural models. Journal of the American Statistical
    Association 110(511), 1013-1023. https://doi.org/10.1080/01621459.2014.956872
 
-.. [6] Fong, C. (2018). Robust and efficient estimation of causal effects with
-   calibrated covariate balance. Unpublished manuscript.
+.. [5] Fan, J., Imai, K., Lee, I., Liu, H., Ning, Y., and Yang, X. (2022).
+   Optimal covariate balancing conditions in propensity score estimation.
+   Journal of Business & Economic Statistics 41(1), 97-110.
+   https://doi.org/10.1080/07350015.2021.2002159
+
+.. [6] Angrist, J. D., Imbens, G. W., and Rubin, D. B. (1996). Identification of
+   causal effects using instrumental variables. Journal of the American
+   Statistical Association 91(434), 444-455.
+   https://doi.org/10.1080/01621459.1996.10476902
 
 License
 -------
 AGPL-3.0
 
-Copyright (c) 2025-2026 Cai Xuanyu, Xu Wenli
+Copyright (c) 2025-2026 Xuanyu Cai, Wenli Xu
 """
 
 from typing import Any, Optional, Union, Dict
@@ -718,8 +724,9 @@ def CBPS(
         Treatment vector. Required when using the array interface instead of
         the formula interface.
     covariates : np.ndarray, optional
-        Covariate matrix. Required when using the array interface. Should not
-        include an intercept column (it will be added automatically).
+        Covariate matrix. Required when using the array interface. An intercept
+        column is added automatically when no constant column is detected; you
+        may also supply an intercept column explicitly and it will be preserved.
     att : int, default 1
         Target estimand. 0 for ATE (average treatment effect), 1 for ATT
         with the second level as treated, 2 for ATT with the first level as
@@ -731,11 +738,19 @@ def CBPS(
         score likelihood and covariate balancing conditions), 'exact' for
         exactly-identified GMM (covariate balancing conditions only).
     two_step : bool, default True
-        If True, uses the two-step GMM estimator (faster). If False, uses
-        the continuous-updating GMM estimator (better finite sample properties).
+        Selects the GMM variant used during balance-loss optimization,
+        matching the R CBPS package's ``twostep`` flag. If True, uses
+        two-step GMM with a pre-computed weight matrix plus the
+        associated analytical gradient (faster, recommended default).
+        If False, uses continuous-updating GMM (the weight matrix is
+        recomputed each iteration) and falls back to numerical
+        (forward finite-difference) gradients. This flag is
+        independent of ``method``: ``method='over'``/``'exact'`` selects
+        the moment conditions, while ``two_step`` only affects the
+        optimizer.
     twostep : bool, optional
-        Alias for ``two_step`` parameter. Use ``two_step`` for consistency
-        with Python naming conventions.
+        Alias for ``two_step``. Use ``two_step`` for consistency with
+        Python naming conventions.
     standardize : bool, default True
         If True, normalizes weights to sum to 1 within each treatment group
         (or to 1 for the entire sample with continuous treatments). If False,
@@ -767,12 +782,15 @@ def CBPS(
     Returns
     -------
     CBPSResults
-        A fitted CBPS object containing:
-        - coefficients: estimated propensity score coefficients
-        - fitted.values: estimated propensity scores
-        - weights: covariate balancing weights
-        - converged: convergence status
-        - j_statistic: J-statistic for overidentification test
+        A fitted CBPS object containing, among other attributes:
+
+        - ``coefficients``: estimated propensity score coefficients
+        - ``fitted_values``: estimated propensity scores (binary / continuous)
+          or fitted class probabilities (multi-valued)
+        - ``weights``: covariate balancing weights
+        - ``converged``: convergence status flag
+        - ``J``: Hansen J-statistic for the over-identification test
+          (``J_stat`` is an alias)
 
     Raises
     ------
@@ -784,9 +802,16 @@ def CBPS(
     -----
     **Treatment Type Detection**
 
-    - Binary treatments: Automatically detected for integer arrays with ≤4 unique values
-    - Multi-valued treatments: Must be converted to ``pd.Categorical`` before fitting
-    - Continuous treatments: Automatically detected for floating-point arrays or >4 unique values
+    - Binary treatments: Automatically detected only when the array has exactly
+      two unique values and they are a subset of ``{0, 1, 0.0, 1.0, False, True}``.
+      Float 0/1 arrays are accepted but trigger a ``UserWarning`` recommending
+      an explicit integer or categorical representation.
+    - Multi-valued treatments (3–4 levels): Must be passed as ``pd.Categorical``
+      (or a DataFrame column with categorical dtype). Numeric arrays with 3–4
+      unique values are **not** auto-detected and are treated as continuous
+      (with a warning).
+    - Continuous treatments: Any numeric array that does not match the binary
+      rule above, regardless of dtype or unique value count.
 
     **Estimation Methods**
 
@@ -1959,7 +1984,8 @@ def CBPS(
         treat = treat_encoded
 
         # Normalize att to 0 or 1 (encoding already handles att=2 reversal)
-        # att=0 → 0 (ATE), att=1 → 1 (ATT), att=2 → 1 (ATT with reversed encoding)
+        # att=0 → 0 (ATE), att=1 → 1 (ATT, T=1 as treated),
+        # att=2 → 1 (ATT, T=0 as treated after label swap)
         # For oCBPS, att_for_encoding is always 0, so att_normalized will be 0
         att_normalized = 0 if att_for_encoding == 0 else 1
 
@@ -2679,7 +2705,11 @@ def CBMSM(
     formula : str
         Treatment model formula (e.g., 'treat ~ x1 + x2 + x3').
         The same covariates are used for all time periods. Data should be
-        sorted by time within each unit.
+        sorted by time within each unit. Column names containing special
+        characters such as ``.`` (for instance ``d.gone.neg``) are
+        automatically wrapped in ``Q("...")`` so that patsy does not treat
+        them as attribute access; you can therefore use R CBPS-style names
+        directly in the formula string.
     id : str or array-like
         Unit identifier column name (str) or ID array identifying individuals
         in the panel data.
@@ -2705,10 +2735,11 @@ def CBMSM(
         Whether treatment model coefficients vary across time:
         - False: Time-invariant model (shared coefficients across periods)
         - True: Time-varying model (independent coefficients per period)
-    init : {'opt', 'glm'}, default='opt'
+    init : {'opt', 'glm', 'CBPS'}, default='opt'
         Initialization method:
         - 'opt': Use both CBPS and GLM starting values, select best balance
         - 'glm': Use only GLM starting values
+        - 'CBPS': Use only CBPS starting values
     iterations : int, optional
         Maximum number of optimization iterations.
     **kwargs
@@ -2800,7 +2831,11 @@ def npCBPS(
     seed : int, optional
         Random seed for reproducibility.
     verbose : int, default=0
-        Verbosity level for progress messages.
+        Currently accepted only for API consistency with the other CBPS
+        estimators; the underlying :func:`cbps.nonparametric.npcbps.npCBPS`
+        routine uses ``print_level`` to control diagnostic output. Use
+        ``print_level`` instead of ``verbose`` if you want to see progress
+        messages.
     **kwargs : Any
         Additional parameters passed to the underlying optimization routine.
 
@@ -2885,30 +2920,39 @@ def hdCBPS(
         - 'binomial': Logistic regression model
         - 'poisson': Poisson regression model
     seed : int, optional
-        Random seed for reproducibility. Note: Current implementation uses
-        deterministic LASSO, so this parameter does not affect results.
+        Random seed forwarded to ``numpy.random.seed``. Seeds the
+        cross-validation fold assignment used by LASSO variable selection
+        (Steps 1 and 2 of Ning, Peng & Imai, 2020), so fixing ``seed``
+        makes the selected covariates and the resulting ATE / ATT
+        reproducible across runs.
     na_action : {None, 'warn', 'drop', 'fail'}, optional
         How to handle missing values:
         - None or 'warn': Remove missing observations with warning
         - 'drop': Remove missing observations silently
         - 'fail': Raise an error for missing values
     verbose : int, default 0
-        Verbosity level for output:
-        - 0: Silent mode
-        - 1: Basic iteration information
-        - 2: Detailed debugging information
+        Currently unused; accepted for API consistency across the CBPS
+        estimators and reserved for future use. Pass ``seed`` if you want
+        reproducible LASSO cross-validation, rather than relying on
+        ``verbose``.
 
     Returns
     -------
     HDCBPSResults
         Result object containing:
-        - ATE: Estimated average treatment effect
-        - ATT: Estimated average treatment effect on the treated
-        - s: Selected variables
-        - fitted_values: Estimated propensity scores
-        - coefficients0: LASSO coefficients for control group (T=0)
-        - coefficients1: LASSO coefficients for treatment group (T=1)
-        - coefficients: Alias for coefficients0 (for API consistency)
+
+        - ``ATE``: Estimated average treatment effect
+        - ``ATT``: Estimated average treatment effect on the treated (``None``
+          when ``ATT=0``)
+        - ``s``: Sandwich standard error of ``ATE``
+          (Equation 11 in Ning, Peng & Imai, 2020)
+        - ``w``: Sandwich standard error of ``ATT`` (``None`` when ``ATT=0``)
+        - ``fitted_values``: Calibrated propensity scores
+        - ``coefficients0``: LASSO + calibration coefficients for the control
+          outcome model
+        - ``coefficients1``: LASSO + calibration coefficients for the treated
+          outcome model
+        - ``coefficients``: Alias for ``coefficients0`` (for API consistency)
 
     Notes
     -----
@@ -2945,7 +2989,9 @@ def hdCBPS(
     >>>
     >>> # View results
     >>> print(f"ATE: {result.ATE:.4f}")
-    >>> print(f"Selected variables: {len(result.s)}")
+    >>> print(f"Standard error of ATE: {result.s:.4f}")
+    >>> print(f"Selected variables (treated):  {result.n_selected_treat}")
+    >>> print(f"Selected variables (control):  {result.n_selected_control}")
     >>> print(f"Converged: {result.converged}")
     """
     from cbps.highdim.hdcbps import hdCBPS as _hdCBPS
@@ -3040,6 +3086,12 @@ def CBIV(
     ----------
     Imai, K. and Ratkovic, M. (2014). Covariate balancing propensity score.
     Journal of the Royal Statistical Society: Series B, 76(1), 243-263.
+    https://doi.org/10.1111/rssb.12027
+
+    Angrist, J. D., Imbens, G. W., and Rubin, D. B. (1996). Identification of
+    causal effects using instrumental variables. Journal of the American
+    Statistical Association, 91(434), 444-455.
+    https://doi.org/10.1080/01621459.1996.10476902
 
     Examples
     --------
@@ -3210,7 +3262,8 @@ def balance(cbps_obj, enhanced: bool = False, threshold: float = 0.1,
         - weights: final CBPS weights
         - x: covariate matrix
         - y: treatment variable
-        Supports CBPS, CBPSContinuous, and npCBPS objects.
+        Supports CBPSResults (binary, multi-valued and continuous treatments)
+        and NPCBPSResults; see the note below on CBMSMResults.
     enhanced : bool, default False
         If False, returns basic balance statistics format.
         If True, returns enhanced diagnostics including:
@@ -3226,12 +3279,23 @@ def balance(cbps_obj, enhanced: bool = False, threshold: float = 0.1,
     Returns
     -------
     dict
-        If enhanced=False (default):
-        - balanced: balance statistics after weighting
-        - original/unweighted: baseline unweighted statistics
+        If ``enhanced=False`` (default), the returned dictionary keys depend on
+        the treatment type of ``cbps_obj``:
 
-        If enhanced=True (enhanced diagnostics):
-        Contains above keys plus:
+        - **Binary / multi-valued CBPS (CBPSResults)**: keys ``'balanced'``
+          and ``'original'`` (lower case), each holding standardised-mean-
+          difference tables before/after weighting.
+        - **Continuous CBPS (CBPSResults with continuous treatment)**: keys
+          ``'balanced'`` and ``'unweighted'`` (lower case), each holding
+          absolute Pearson correlations between treatment and covariates.
+        - **npCBPS (NPCBPSResults)**: routes to the appropriate binary or
+          continuous branch above.
+        - **CBMSM (CBMSMResults)**: keys ``'Balanced'``, ``'Unweighted'`` and
+          ``'StatBal'`` (capitalised, mirroring the R CBPS package).
+
+        If ``enhanced=True`` (enhanced diagnostics): returns the keys above
+        (following the same casing rules) plus:
+
         - smd_weighted/abs_corr_weighted: weighted SMDs or correlations
         - smd_unweighted/abs_corr_unweighted: unweighted SMDs or correlations
         - improvement_pct: percentage improvement in balance

@@ -16,11 +16,13 @@ Key Innovations
    - g1_baseline: Balance covariates h1 related to E(Y(0)|X)
    - g2_diff: Balance covariates h2 related to E(Y(1)-Y(0)|X)
 
-2. **Double Robustness** (Theorem 3.1):
-   Consistent if either the propensity score model or outcome model is correct.
+2. **Double Robustness**:
+   Consistent if either the propensity score model or outcome model is correct
+   (Fan et al., 2022).
 
-3. **Semiparametric Efficiency** (Corollary 3.2):
-   Achieves Hahn 1998 efficiency bound when both models are correct and m=q.
+3. **Semiparametric Efficiency**:
+   Achieves the Hahn (1998) efficiency bound when both models are correct and
+   m=q (Fan et al., 2022).
 
 Implementation Notes
 --------------------
@@ -296,11 +298,13 @@ def cbps_optimal_2treat(
     - g1_baseline: (T/π - (1-T)/(1-π)) h1(X) = 0, balances E(Y(0)|X)
     - g2_diff: (T/π - 1) h2(X) = 0, balances E(Y(1)-Y(0)|X)
 
-    **Double Robustness** (Theorem 3.1):
-    Consistent if either the propensity score model or outcome model is correct.
+    **Double Robustness**:
+    Consistent if either the propensity score model or outcome model is correct
+    (Fan et al., 2022).
 
-    **Semiparametric Efficiency** (Corollary 3.2):
-    Achieves Hahn 1998 efficiency bound when both models are correct and m=q.
+    **Semiparametric Efficiency**:
+    Achieves the Hahn (1998) efficiency bound when both models are correct and
+    m=q (Fan et al., 2022).
 
     References
     ----------

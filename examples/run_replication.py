@@ -1,12 +1,14 @@
-"""Run the Imai & Ratkovic 2014 replication as a script."""
+"""Run the Imai & Ratkovic 2014 replication as a script.
+
+Assumes the ``cbps`` package is installed into the active environment
+(e.g., via ``pip install -e .`` from the repository root).
+"""
 import warnings
 import numpy as np
 import pandas as pd
 from scipy.special import expit
 from scipy.spatial.distance import cdist
 from scipy.optimize import minimize
-import sys
-sys.path.insert(0, '/Users/cxy/Desktop/cbps/CBPS_python')
 
 import cbps
 from cbps.datasets import load_lalonde

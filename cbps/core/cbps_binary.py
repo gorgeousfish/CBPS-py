@@ -949,12 +949,53 @@ def _glm_init(
         model = sm.GLM(treat, X, family=Binomial())
         glm_fit = model.fit(tol=1e-8, maxiter=25)  # Standard IRLS algorithm
 
+        # When the design matrix induces quasi-complete separation (a
+        # common situation for highly expressive specifications such as
+        # polynomial expansions on structurally different groups), the
+        # unpenalized IRLS step can fail to converge and returns
+        # coefficients whose fitted probabilities are all pinned near 0/1.
+        # Such a warm start drives the downstream GMM optimization to a
+        # degenerate basin. As a defensive fallback we recompute the
+        # initial coefficients with a vanishingly small L2 penalty
+        # (``alpha=1e-6``), which is numerically indistinguishable from
+        # the unpenalized MLE in well-posed cases but remains well
+        # defined under separation. This only affects the initial values
+        # used to seed the GMM; the CBPS estimator itself is unchanged.
+        beta_candidate = np.asarray(glm_fit.params, dtype=float)
+        probs_candidate = np.asarray(glm_fit.fittedvalues, dtype=float)
+        extreme_ratio = float(np.mean(
+            (probs_candidate < 1e-3) | (probs_candidate > 1 - 1e-3)
+        ))
+        iteration_failed = (
+            not getattr(glm_fit, "converged", True)
+            or not np.all(np.isfinite(beta_candidate))
+            or extreme_ratio > 0.5
+        )
+        if iteration_failed:
+            try:
+                reg_fit = sm.GLM(treat, X, family=Binomial()).fit_regularized(
+                    alpha=1e-6, L1_wt=0.0, maxiter=200
+                )
+                reg_params = np.asarray(reg_fit.params, dtype=float)
+                if np.all(np.isfinite(reg_params)):
+                    glm_fit = reg_fit  # adopt ridge-penalized warm start
+            except Exception:
+                # If even the penalized IRLS fails, keep the original fit
+                # and let the downstream NaN-handling / alpha scaling deal
+                # with it.
+                pass
+
     # Step 2: Handle NA coefficients (first pass)
-    beta_glm = glm_fit.params.copy()
+    beta_glm = np.asarray(glm_fit.params, dtype=float).copy()
     beta_glm[np.isnan(beta_glm)] = 0
 
     # Step 3: Probability clipping
-    probs_glm = glm_fit.fittedvalues.copy()
+    # ``fit_regularized`` returns a GLMResultsWrapper without ``fittedvalues``
+    # on some statsmodels versions; fall back to ``predict`` when needed.
+    if hasattr(glm_fit, "fittedvalues"):
+        probs_glm = np.asarray(glm_fit.fittedvalues, dtype=float).copy()
+    else:
+        probs_glm = np.asarray(glm_fit.predict(X), dtype=float).copy()
     probs_glm = np.clip(probs_glm, PROBS_MIN, 1 - PROBS_MIN)
 
     # Step 4: Extract coefficients and handle NA (second pass)

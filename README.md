@@ -31,6 +31,7 @@ This dual optimization yields propensity scores that are more robust to model mi
 - **Doubly Robust Estimation** - Optimal CBPS (oCBPS) with improved efficiency
 - **Instrumental Variables** - CBPS for IV settings with treatment noncompliance
 - **Model Diagnostics** - Hansen's J-test, balance statistics, and visualization tools
+- **scikit-learn Integration** - `cbps.sklearn.CBPSEstimator` is a `BaseEstimator`/`ClassifierMixin` wrapper usable inside `Pipeline` (see [scikit-learn Integration](#scikit-learn-integration) for details and current limitations)
 - **R Package Compatibility** - Numerical accuracy within ±1e-6 of CBPS R package v0.23
 
 ## Installation
@@ -65,12 +66,22 @@ cd CBPS-py
 pip install -e ".[dev]"
 ```
 
-> **Note for Apple Silicon Users**: The `glmnetforpython` package (required for hdCBPS) needs compilation from source:
+> **Note for Apple Silicon Users**: `hdCBPS` requires the optional
+> `glmnetforpython` package, which ships a Fortran extension. On most
+> platforms `pip install glmnetforpython` pulls a pre-built wheel. If the
+> wheel is unavailable and compilation fails on your Mac, install a Fortran
+> compiler first and re-run pip:
 > ```bash
-> brew install gcc
-> git clone https://github.com/thierrymoudiki/glmnetforpython.git
-> cd glmnetforpython && pip install -e .
+> brew install gcc               # provides gfortran
+> export FC=gfortran
+> pip install glmnetforpython
 > ```
+> If PyPI still does not provide a suitable wheel, install from source:
+> ```bash
+> git clone https://github.com/thierrymoudiki/glmnetforpython.git
+> pip install -e ./glmnetforpython
+> ```
+> See the [`Installation` section of the docs](https://cbps-python.readthedocs.io/en/latest/installation.html#requirements-for-hdcbps) for the same steps with extra troubleshooting tips.
 
 ## Quick Start
 
@@ -120,28 +131,44 @@ print(bal['balanced'])   # Balance after CBPS weighting
 print(bal['original'])   # Balance before weighting (baseline)
 ```
 
+> **Key casing note.** `balance()` uses lower-case keys for the binary /
+> multi-valued / continuous cases: ``'balanced'`` and ``'original'`` (binary /
+> multi-valued) or ``'unweighted'`` (continuous). `CBMSM` instead returns
+> capitalised keys — ``'Balanced'``, ``'Unweighted'`` and ``'StatBal'`` — to
+> stay aligned with the R CBPS package.
+
 ## Method Family
 
-The CBPS methodology has been extended to address various causal inference challenges:
+The CBPS methodology has been extended to address a range of causal inference
+challenges. All the variants below share a common GMM / empirical-likelihood
+framework and are exposed through the `cbps` package:
 
 ```
-                        ┌─────────────────────┐
-                        │       CBPS           │
-                        │ Binary/Multi-valued  │
-                        └──────────┬───────────┘
-               ┌───────────┬──────┼──────┬───────────┐
-               ▼           ▼      ▼      ▼           ▼
-          ┌─────────┐ ┌────────┐ ┌────┐ ┌──────┐ ┌──────┐
-          │  CBGPS  │ │ CBMSM  │ │hdCB│ │ CBIV │ │oCBPS │
-          │Continuo-│ │Longitu-│ │PS  │ │Instr-│ │Optim-│
-          │us Treat.│ │dinal   │ │High│ │ument-│ │al/DR │
-          └────┬────┘ └────────┘ │Dim │ │al IV │ └──────┘
-               ▼                 └────┘ └──────┘
-          ┌─────────┐
-          │ npCBPS  │
-          │Nonparam.│
-          └─────────┘
+                                 ┌──────────────────────┐
+                                 │         CBPS         │
+                                 │ Binary / Multi-valued│
+                                 └──────────┬───────────┘
+       ┌───────────────┬────────────────────┼──────────────────┬──────────────────┐
+       ▼               ▼                    ▼                  ▼                  ▼
+  ┌─────────┐    ┌──────────┐         ┌──────────┐       ┌──────────┐       ┌──────────┐
+  │  CBGPS  │    │  CBMSM   │         │  hdCBPS  │       │   CBIV   │       │  oCBPS   │
+  │Continu- │    │Longitud- │         │   High-  │       │Instrumen-│       │  Optimal │
+  │ ous     │    │  inal    │         │dimension-│       │ tal Vari-│       │  / DR    │
+  │Treatment│    │  / MSM   │         │    al    │       │   ables  │       │ ATE est. │
+  └────┬────┘    └──────────┘         └──────────┘       └──────────┘       └──────────┘
+       │
+       ▼
+  ┌─────────┐
+  │ npCBPS  │
+  │Nonparam.│   (empirical likelihood; supports continuous + discrete T)
+  └─────────┘
 ```
+
+`oCBPS` is reached through the same `CBPS()` entry point by passing
+`baseline_formula` and `diff_formula` (Fan et al., 2022). `npCBPS()`
+provides the nonparametric empirical-likelihood estimator of Fong, Hazlett
+& Imai (2018), complementing the parametric continuous CBGPS that is also
+exposed through `CBPS()`.
 
 ### Method Selection Guide
 
@@ -181,17 +208,48 @@ $$E\left[T \cdot X - \frac{\pi(X)(1-T) \cdot X}{1-\pi(X)}\right] = 0$$
 ### Syntax
 
 ```python
-CBPS(formula, data, att=1, method='over', two_step=True, standardize=True)
+CBPS(
+    formula=None, data=None,
+    treatment=None, covariates=None,       # array interface (alternative to formula/data)
+    att=1, method='over', two_step=True, standardize=True,
+    sample_weights=None,
+    baseline_formula=None, diff_formula=None,   # enables oCBPS (Fan et al. 2022)
+    iterations=1000, theoretical_exact=False,
+    na_action='warn', verbose=0,
+)
 ```
 
 | Parameter | Default | Description |
 |:----------|:--------|:------------|
-| `formula` | - | R-style formula: `'treatment ~ x1 + x2 + ...'` |
-| `data` | - | pandas DataFrame |
-| `att` | `1` | Estimand: 0 = ATE, 1 = ATT, 2 = ATT (reversed encoding) |
-| `method` | `'over'` | `'exact'` (just-identified) or `'over'` (over-identified) |
+| `formula` | `None` | R-style formula, e.g. `'treatment ~ x1 + x2 + ...'`. Use with `data=` |
+| `data` | `None` | pandas DataFrame containing the variables in `formula` |
+| `treatment` / `covariates` | `None` | Array interface alternative to `formula` / `data` |
+| `att` | `1` | Estimand: `0`=ATE, `1`=ATT (T=1 as treated), `2`=ATT (T=0 as treated) |
+| `method` | `'over'` | `'exact'` (just-identified) or `'over'` (over-identified GMM) |
 | `two_step` | `True` | Two-step GMM (`True`) or continuous updating (`False`) |
-| `standardize` | `True` | Standardize weights to sum to 1 within each treatment group |
+| `standardize` | `True` | Normalise weights to sum to 1 within each treatment group |
+| `sample_weights` | `None` | Survey / sampling weights (length `n`); defaults to 1 everywhere |
+| `baseline_formula` | `None` | Outcome baseline covariates K(X); triggers oCBPS when paired with `diff_formula` |
+| `diff_formula` | `None` | Treatment-effect covariates L(X); used together with `baseline_formula` |
+| `iterations` | `1000` | Maximum optimizer iterations |
+| `theoretical_exact` | `False` | When `method='exact'`, use the direct equation solver instead of the balance-loss optimizer |
+| `na_action` | `'warn'` | `'warn'` (drop + warn), `'fail'` (raise), or `'ignore'` (patsy default) |
+| `verbose` | `0` | `0`=silent, `1`=basic, `2`=detailed diagnostics |
+
+> **R-compatibility aliases.** For CBPS users coming from R, `CBPS()` also
+> accepts the uppercase alias `ATT` (forwarded to `att`) and the R-style
+> alias `twostep` (forwarded to `two_step`). Note that `CBMSM()` and `CBIV()`
+> use `twostep` as their canonical parameter name — this alias convention
+> applies only to `CBPS()`.
+>
+> **Interaction between `method` and `two_step`.** The two flags are
+> independent: `method='over'` / `'exact'` selects the moment conditions
+> (over-identified GMM vs. just-identified balance-only), while `two_step`
+> controls whether an analytical gradient is used during balance-loss
+> optimization (matching the R CBPS package, where `twostep=TRUE` enables
+> the analytical gradient and `twostep=FALSE` falls back to numerical
+> differentiation). Both combinations are valid.
+
 
 ### Example
 
@@ -255,9 +313,27 @@ where T* and X* are centered and scaled versions of treatment and covariates.
 
 ### Syntax
 
+Continuous treatment is auto-detected from the data type; the call uses the
+same `CBPS()` entry point as the binary case, with continuous-specific
+defaults highlighted below:
+
 ```python
-CBPS(formula, data, method='over')  # Auto-detects continuous treatment
+CBPS(
+    formula, data,
+    att=0,              # only att=0 (ATE) is supported for continuous T
+    method='over',      # 'over' (recommended) or 'exact'
+    two_step=True,
+    standardize=True,
+    sample_weights=None,
+    iterations=1000,
+    na_action='warn',
+    verbose=0,
+)
 ```
+
+The balance loss is built from Pearson correlations between $T^*$ and $X^*$
+rather than standardized mean differences. Passing `att=1` or `att=2` with a
+continuous treatment triggers a warning and is silently coerced back to `att=0`.
 
 ### Example
 
@@ -325,12 +401,23 @@ $$\max \prod_{i=1}^n w_i \quad \text{s.t.} \quad \sum_i w_i X_i^* T_i^* = 0, \qu
 ### Syntax
 
 ```python
-npCBPS(formula, data, corprior=0.01)
+npCBPS(
+    formula, data,
+    na_action=None,    # None/'warn'/'fail'/'ignore' for missing values
+    corprior=None,     # prior penalty; default 0.1/n (Fong et al., 2018)
+    print_level=0,     # >0 prints optimization diagnostics
+    seed=None,         # sets np.random.seed before optimisation
+)
 ```
 
 | Parameter | Default | Description |
 |:----------|:--------|:------------|
-| `corprior` | None (auto: 0.1/n) | Prior penalty for correlation (larger = more tolerance for imbalance) |
+| `formula` | — | Treatment-and-covariates formula, e.g. `'T ~ x1 + x2'` |
+| `data` | — | `pandas.DataFrame` containing the variables in `formula` |
+| `na_action` | `'warn'` | Missing-value policy: `'warn'` (drop + warn), `'fail'` (raise), `'ignore'` (drop silently) |
+| `corprior` | `None` (auto: `0.1/n`) | Prior penalty for the allowed weighted correlation η ~ N(0, σ² I). Larger = more tolerance for imbalance. Pass a float (e.g. `0.01`) to override the sample-size-adaptive default. |
+| `print_level` | `0` | Verbosity of the empirical-likelihood optimiser |
+| `seed` | `None` | Random seed forwarded to `np.random.seed` for reproducibility |
 
 ### Example
 
@@ -391,18 +478,29 @@ $$E\left[w_i(\bar{T}_J, \bar{X}_J) \cdot X_{ij} \mid \bar{T}_{j-1}\right] = E[X_
 ### Syntax
 
 ```python
-CBMSM(formula, id, time, data, type='MSM', time_vary=False)
+CBMSM(
+    formula, id, time, data,
+    type='MSM',              # 'MSM' or 'MultiBin'
+    twostep=True,            # two-step GMM (recommended); set False for CU-GMM
+    msm_variance='approx',   # 'approx' (low-rank, default) or 'full'
+    time_vary=False,         # share coefficients across periods or not
+    init='opt',              # 'opt' | 'glm' | 'CBPS'
+    iterations=None,         # None = algorithm-specific default
+)
 ```
 
 | Parameter | Description |
 |:----------|:------------|
 | `formula` | Treatment model formula |
-| `id` | Unit identifier variable name |
-| `time` | Time period variable name |
+| `id` | Unit identifier column name or array |
+| `time` | Time period column name or array |
+| `data` | `pandas.DataFrame` containing treatment, covariates, id, and time |
 | `type` | `'MSM'` (marginal structural) or `'MultiBin'` (multiple binary) |
 | `twostep` | Two-step GMM (`True`, default) or continuous updating (`False`) |
 | `msm_variance` | `'approx'` (default) or `'full'` variance estimation |
-| `time_vary` | Whether covariates are time-varying |
+| `time_vary` | Whether **treatment model coefficients** vary across time (not whether covariates are time-varying). `False` shares one coefficient vector across periods; `True` estimates separate coefficients per period. |
+| `init` | Initialization scheme: `'opt'` (default, pick best of GLM and CBPS), `'glm'`, or `'CBPS'` |
+| `iterations` | Maximum optimizer iterations (default: algorithm-specific) |
 
 ### Example
 
@@ -468,14 +566,32 @@ where α* are outcome model coefficients. This enables root-n consistency even w
 ### Syntax
 
 ```python
-hdCBPS(formula, data, y, ATT=0)
+hdCBPS(
+    formula, data, y,
+    ATT=0,              # 0 = ATE, 1 = ATT
+    iterations=1000,    # Nelder-Mead iterations in the GMM step
+    method='linear',    # 'linear' | 'binomial' | 'poisson' (outcome family)
+    seed=None,          # seeds cross-validation fold assignment
+    na_action=None,     # 'warn' (default) | 'drop' | 'fail'
+    verbose=0,          # reserved for future use
+)
 ```
 
-| Parameter | Description |
-|:----------|:------------|
-| `formula` | Propensity score model (can include many covariates) |
-| `y` | Outcome variable name (required for variable selection) |
-| `ATT` | 0 = ATE, 1 = ATT |
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `formula` | — | Propensity score model formula (may contain many covariates) |
+| `data` | — | `pandas.DataFrame` with treatment, covariates and outcome |
+| `y` | — | Outcome variable name or array (required for the Step 2 LASSO) |
+| `ATT` | `0` | Target estimand: `0` = ATE, `1` = ATT |
+| `iterations` | `1000` | Maximum Nelder-Mead iterations used in Step 3 (GMM calibration) |
+| `method` | `'linear'` | Outcome family: `'linear'` (Gaussian), `'binomial'` (logistic), `'poisson'` (count) |
+| `seed` | `None` | Seeds cross-validation fold assignment for reproducible LASSO selection |
+| `na_action` | `'warn'` | Missing-value policy: `'warn'` (drop + warn), `'drop'` (silent drop), `'fail'` (raise) |
+| `verbose` | `0` | Verbosity level (reserved for future use) |
+
+> **Reproducibility tip.** LASSO cross-validation fold assignment is drawn from
+> `numpy.random`; pass `seed=<int>` (or call `np.random.seed(...)` before
+> `hdCBPS`) to make Step 1 / Step 2 results reproducible.
 
 ### Example
 
@@ -536,10 +652,12 @@ This gives greater weight to determinants of the mean potential outcome that is 
 
 ### Syntax
 
-Optimal CBPS is accessed through the `CBPS()` function by specifying both baseline and difference formulas:
+Optimal CBPS is accessed through the `CBPS()` function by passing both
+`baseline_formula` and `diff_formula` as keyword arguments (they are not the
+third / fourth positional arguments of `CBPS()`):
 
 ```python
-CBPS(formula, data, baseline_formula, diff_formula, att=0)
+CBPS(formula, data, baseline_formula=..., diff_formula=..., att=0)
 ```
 
 | Parameter | Description |
@@ -606,22 +724,35 @@ CBIV extends the covariate balancing framework to instrumental variable settings
 
 ```python
 # Formula interface (recommended)
-CBIV(formula='treatment ~ covariates | instruments', data=df)
+CBIV(
+    formula='treatment ~ covariates | instruments',
+    data=df,
+    method='over', twostep=True, twosided=True,
+    iterations=1000,
+    probs_min=1e-6,
+    warn_clipping=True, clipping_warn_threshold=0.05,
+    verbose=0,
+)
 
-# Matrix interface
-CBIV(Tr=treatment, Z=instrument, X=covariates)
+# Matrix interface (equivalent; mutually exclusive with formula/data)
+CBIV(Tr=treatment, Z=instrument, X=covariates, method='over', twosided=False)
 ```
 
 | Parameter | Default | Description |
 |:----------|:--------|:------------|
-| `formula` | None | IV formula: `'treat ~ x1 + x2 \| z'` (pipe separates covariates from instruments) |
-| `data` | None | pandas DataFrame (required with formula) |
-| `Tr` | None | Treatment array (matrix interface) |
-| `Z` | None | Instrument array (matrix interface) |
-| `X` | None | Covariate array (matrix interface) |
-| `method` | `'over'` | `'exact'` or `'over'` (over-identified GMM) |
-| `twostep` | `True` | Two-step GMM (`True`) or continuous updating (`False`) |
-| `twosided` | `True` | Two-sided noncompliance (both always-takers and never-takers) |
+| `formula` | `None` | IV formula: `'treat ~ x1 + x2 \| z'` (the `\|` separates covariates from instruments) |
+| `data` | `None` | `pandas.DataFrame` (required with `formula`) |
+| `Tr` | `None` | Binary treatment array (matrix interface) |
+| `Z` | `None` | Binary instrument array (matrix interface) |
+| `X` | `None` | Covariate matrix without intercept (matrix interface) |
+| `method` | `'over'` | `'over'` (score + balance conditions), `'exact'` (balance only) or `'mle'` (score only) |
+| `twostep` | `True` | Two-step GMM (faster, default) or continuous-updating GMM (`False`) |
+| `twosided` | `True` | `True` for two-sided noncompliance (compliers + always-takers + never-takers); `False` for one-sided (no always-takers) |
+| `iterations` | `1000` | Maximum optimizer iterations |
+| `probs_min` | `1e-6` | Lower bound on compliance probabilities; probabilities are clipped to `[probs_min, 1 - probs_min]` |
+| `warn_clipping` | `True` | Whether to warn when the share of clipped probabilities exceeds `clipping_warn_threshold` |
+| `clipping_warn_threshold` | `0.05` | Clipping fraction above which the warning fires |
+| `verbose` | `0` | `0` silent, `1` basic, `2` detailed optimisation diagnostics |
 
 ### Example
 
@@ -689,6 +820,19 @@ print(bal['original'])   # Baseline unweighted statistics
 
 ### Asymptotic Variance (AsyVar)
 
+`AsyVar` computes the asymptotic variance and confidence interval for the
+AIPW-based ATE using one of two closed-form variance formulae derived by
+Fan et al. (2022):
+
+- `method='CBPS'` — full sandwich formula that propagates propensity-score
+  estimation uncertainty through the joint GMM influence function.
+- `method='oCBPS'` — semiparametric efficiency bound (Hahn, 1998), valid
+  when the oCBPS balancing conditions `baseline_formula` / `diff_formula`
+  produce a root-n consistent, doubly-robust ATE estimator.
+
+The `method` argument of `AsyVar` is independent of the `method` argument of
+`CBPS()` (which controls `'over'` vs `'exact'` GMM).
+
 ```python
 from cbps import CBPS, AsyVar
 from cbps.datasets import load_lalonde
@@ -699,7 +843,7 @@ fit = CBPS(
     data=data, att=0, method='over'
 )
 
-# Asymptotic variance for ATE
+# Efficiency-bound variance (recommended when an outcome model is available)
 result = AsyVar(Y=data['re78'].values, CBPS_obj=fit, method='oCBPS')
 
 # Preferred: snake_case keys
@@ -708,6 +852,9 @@ print(f"95% CI: [{result['ci_mu_hat'][0]:.1f}, {result['ci_mu_hat'][1]:.1f}]")
 
 # Backward compatible: R-style keys also work
 print(f"ATE: {result['mu.hat']:.3f}")  # same value as result['mu_hat']
+
+# Full sandwich variance (no outcome-model efficiency claim needed)
+result_cbps = AsyVar(Y=data['re78'].values, CBPS_obj=fit, method='CBPS')
 ```
 
 ### Visualization
@@ -799,6 +946,52 @@ print(f"p-value: {j_pvalue:.4f}")
 | `plot_cbmsm()` | Balance plot for marginal structural models |
 | `plot_npcbps()` | Balance plot for nonparametric CBPS |
 
+### scikit-learn Integration
+
+| Class | Description |
+|:------|:------------|
+| `cbps.sklearn.CBPSEstimator` | scikit-learn compatible wrapper around the binary / multi-valued `CBPS()` estimator; exposes `fit`, `predict_proba`, `predict`, `get_weights` and is usable inside `Pipeline`. |
+
+```python
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+
+from cbps.sklearn import CBPSEstimator
+from cbps.datasets import load_lalonde
+
+df = load_lalonde()
+covs = ['age', 'educ', 'black', 'hisp', 'married', 'nodegr', 're74', 're75']
+X = df[covs].values
+T = df['treat'].values
+Y = df['re78'].values
+
+# Fit CBPS inside a sklearn Pipeline (preprocessing → CBPS)
+pipe = Pipeline([
+    ('scaler', StandardScaler()),
+    ('cbps', CBPSEstimator(att=0, method='over')),
+])
+pipe.fit(X, T)
+
+est = pipe.named_steps['cbps']
+print(f"Converged: {est.cbps_result_.converged}")
+print(f"J-statistic: {est.cbps_result_.J:.4f}")
+
+# Retrieve IPW weights for a downstream weighted outcome regression
+w = est.get_weights()
+ate_model = LinearRegression().fit(T.reshape(-1, 1), Y, sample_weight=w)
+print(f"IPW-weighted ATE: {ate_model.coef_[0]:.2f}")
+```
+
+> **Known limitations.** `CBPSEstimator.predict_proba` / `predict` return
+> the stored training-sample propensity scores only and raise
+> `ValueError` on arrays with a different sample count. As a consequence,
+> `GridSearchCV` / `cross_val_score` with default scoring do **not**
+> produce meaningful test-fold scores. For out-of-sample propensity-score
+> prediction, call the formula-interface result's
+> `CBPSResults.predict(newdata=...)` method instead.
+
 ### Result Attributes (CBPSResults)
 
 | Attribute | Type | Description |
@@ -827,8 +1020,8 @@ print(f"p-value: {j_pvalue:.4f}")
 | `.summary()` | Returns `CBPSSummary` with coefficient table, SEs, z-values, p-values |
 | `.vcov()` | Returns variance-covariance matrix |
 | `.balance(**kwargs)` | Computes covariate balance diagnostics |
-| `.predict(newdata, type)` | Predicts propensity scores; `type='response'` or `'link'` |
-| `.plot(kind)` | Diagnostic plots; `kind='deviance'` or `'residuals'` |
+| `.predict(newdata=None, type='response')` | Predict propensity scores (or linear predictor) on new `DataFrame`; defaults to the training sample |
+| `.plot(kind='deviance')` | Deviance-residual diagnostic plots (binary treatment only; currently the only supported `kind`) |
 
 ### Summary Methods for All Result Classes
 
@@ -877,7 +1070,7 @@ The package includes classic datasets for causal inference research:
 | `load_lalonde()` | NSW job training program evaluation | Binary | LaLonde (1986) |
 | `load_lalonde_psid_combined()` | NSW experimental + PSID control data | Binary | Dehejia & Wahba (1999) |
 | `load_blackwell()` | Longitudinal political campaign data | Time-varying Binary | Blackwell (2013) |
-| `load_continuous_simulation()` | Simulated dose-response data (requires external data) | Continuous | Fong et al. (2018) |
+| `load_continuous_simulation()` | Simulated dose-response data (4 DGPs, 200 obs each) | Continuous | Fong et al. (2018) |
 | `load_political_ads()` | Political advertising efficacy | Continuous | Urban & Niebler (2014) |
 | `load_npcbps_continuous_sim()` | Nonparametric CBPS validation data | Continuous | Fong et al. (2018) |
 
@@ -946,7 +1139,7 @@ If you use this package in your research, please cite both the methodology paper
 
 **APA Format:**
 
-> Cai, X., & Xu, W. (2026). *cbps: Covariate Balancing Propensity Score for Python* (Version 0.1.0) [Computer software]. GitHub. https://github.com/gorgeousfish/CBPS-py
+> Cai, X., & Xu, W. (2025). *cbps: Covariate Balancing Propensity Score for Python* (Version 0.1.0) [Computer software]. GitHub. https://github.com/gorgeousfish/CBPS-py
 >
 > Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. *Journal of the Royal Statistical Society Series B: Statistical Methodology*, 76(1), 243-263.
 >
@@ -961,10 +1154,10 @@ If you use this package in your research, please cite both the methodology paper
 **BibTeX:**
 
 ```bibtex
-@software{cbps2026python,
+@software{cbps2025python,
   title={cbps: Covariate Balancing Propensity Score for Python},
   author={Cai, Xuanyu and Xu, Wenli},
-  year={2026},
+  year={2025},
   version={0.1.0},
   url={https://github.com/gorgeousfish/CBPS-py}
 }

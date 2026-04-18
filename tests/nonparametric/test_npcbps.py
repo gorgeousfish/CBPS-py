@@ -2778,9 +2778,13 @@ class TestNPCBPSResultsT204T220:
         T218: Verify summary method output
         """
         result = fitted_result
-        
-        summary_str = result.summary()
-        
+
+        # ``summary()`` returns an ``NPCBPSSummary`` object whose ``__str__``
+        # yields the formatted report. Previously this test relied on
+        # ``summary()`` returning a raw string, which no longer holds after
+        # the structured-summary refactor; convert to string explicitly.
+        summary_str = str(result.summary())
+
         assert 'npCBPS' in summary_str
         assert 'Convergence' in summary_str
         assert 'Weight' in summary_str

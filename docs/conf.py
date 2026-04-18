@@ -13,8 +13,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'CBPS'
-copyright = '2025-2026, Cai Xuanyu, Xu Wenli'
-author = 'Cai Xuanyu, Xu Wenli'
+copyright = '2025-2026, Xuanyu Cai, Wenli Xu'
+author = 'Xuanyu Cai, Wenli Xu'
 version = '0.1.0'
 release = '0.1.0'
 
@@ -146,7 +146,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'CBPS.tex', 'CBPS Documentation',
-     'Cai Xuanyu, Xu Wenli', 'manual'),
+     'Xuanyu Cai, Wenli Xu', 'manual'),
 ]
 
 # -- Options for manual page output ------------------------------------------

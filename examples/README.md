@@ -1,161 +1,79 @@
 # CBPS Python Examples
 
-This directory contains comprehensive examples and tutorials for the CBPS Python package.
+This directory contains replication scripts and notebooks that reproduce the
+core empirical results from three of the five CBPS methodology papers this
+package implements: Imai & Ratkovic (2014), Imai & Ratkovic (2015), and Fong,
+Hazlett & Imai (2018). The other two papers — Ning, Peng & Imai (2020) on
+high-dimensional CBPS and Fan et al. (2022) on optimal CBPS — are covered by
+the unit-test suite rather than by full replication notebooks. Each
+replication is provided in two equivalent forms — a Python script (`.py`) for
+command-line use and a Jupyter notebook (`.ipynb`) for interactive
+exploration. A standalone command-line runner for the Kang-Schafer simulation
+is also included.
 
-## Tutorials (Jupyter Notebooks)
+## Available Replications
 
-Interactive tutorials covering complete workflows (4/4 completed):
+### 1. `replicate_imai_ratkovic_2014` — Binary and Multi-Valued CBPS
 
-### 1. `tutorial_binary.ipynb` - Binary Treatment CBPS
-   - LaLonde dataset exploration
-   - ATT and ATE estimation
-   - Method comparison (exact vs. over-identified GMM)
-   - Balance assessment and visualization
-   - Treatment effect estimation with AsyVar
-   - Best practices and troubleshooting
-   - **10 sections, ~360 lines**
+Replicates the two main empirical analyses from
+Imai, K. and Ratkovic, M. (2014). "Covariate Balancing Propensity Score."
+*Journal of the Royal Statistical Society, Series B* 76(1), 243–263.
 
-### 2. `tutorial_continuous.ipynb` - Continuous Treatment CBPS (GPS)
-   - Political ads data exploration
-   - Generalized Propensity Score (GPS) estimation
-   - Covariate balance using correlations (target |ρ| < 0.1)
-   - F-statistic verification for overall balance
-   - GPS weight distribution and effective sample size
-   - Outcome regression with GPS weights
-   - Robust variance adjustment with vcov_outcome
-   - Dose-response curve analysis
-   - **11 sections, ~440 lines**
+- **Section 3.1**: Kang-Schafer (2007) simulation study (Table 1) — compares
+  CBPS against standard logistic regression under four specification scenarios
+  (both correct, PS correct, outcome correct, both wrong) using four
+  downstream estimators (HT, Hájek IPW, WLS, doubly-robust).
+- **Section 3.2**: LaLonde (1986) NSW-PSID evaluation bias analysis (Table 2)
+  — CBPS-based propensity score matching applied to the NSW experimental
+  sample combined with PSID controls.
 
-### 3. `tutorial_msm.ipynb` - Marginal Structural Models (CBMSM)
-   - Blackwell longitudinal data structure exploration
-   - Time-varying vs. time-invariant treatment models
-   - MSM weight estimation with CBMSM
-   - Propensity scores across time periods
-   - MSM weights examination by period
-   - **7 sections, ~365 lines**
+**Files**: `replicate_imai_ratkovic_2014.py`, `replicate_imai_ratkovic_2014.ipynb`
 
-### 4. `tutorial_hdcbps.ipynb` - High-Dimensional CBPS (hdCBPS)
-   - **Note:** Requires glmnetforpython package
-   - High-dimensional data simulation (p=100, n=200, p/n=0.5)
-   - Why standard CBPS fails in high dimensions
-   - LASSO variable selection with cross-validation
-   - Variable selection accuracy metrics (precision/recall/F1)
-   - Propensity score estimation and validation
-   - Balance assessment for selected variables
-   - Effective sample size calculation
-   - Installation troubleshooting (especially Apple Silicon M1/M2/M3)
-   - **8 sections, ~380 lines**
+### 2. `replicate_fong_hazlett_imai_2018` — Continuous Treatment CBPS
 
-**Total: 4 comprehensive tutorials**
+Replicates the main simulation study and empirical application from
+Fong, C., Hazlett, C., and Imai, K. (2018). "Covariate Balancing Propensity
+Score for a Continuous Treatment." *The Annals of Applied Statistics* 12(1),
+156–177.
 
-## Basic Examples (Python Scripts)
+- **Section 4**: Four-DGP simulation study (Figures 1–2) — compares
+  Unadjusted / MLE GPS / CBGPS / npCBGPS across correctly and incorrectly
+  specified treatment and outcome models.
+- **Section 5**: Empirical application to Urban and Niebler (2014) political
+  advertising data (Table 1, Figure 3) — Box-Cox transformed treatment,
+  15 covariates, signed Pearson correlations and F-statistic diagnostics.
 
-Focused examples demonstrating specific functionality:
+**Files**: `replicate_fong_hazlett_imai_2018.py`,
+`replicate_fong_hazlett_imai_2018.ipynb`
 
-### Core Functions
+### 3. `replicate_imai_ratkovic_2015` — Marginal Structural Models
 
-1. `cbps_basic.py` - Basic CBPS usage for binary treatment
-   - ATT estimation with over-identified GMM
-   - Complete workflow from data loading to outcome analysis
-   - 150 lines
+Replicates the empirical application from
+Imai, K. and Ratkovic, M. (2015). "Robust Estimation of Inverse Probability
+Weights for Marginal Structural Models." *Journal of the American Statistical
+Association* 110(511), 1013–1023.
 
-2. `cbmsm_basic.py` - Marginal Structural Models
-   - Time-invariant and time-varying treatment models
-   - Propensity score verification across time periods
-   - 150 lines
+- Blackwell (2013) longitudinal campaign data, 5 time periods.
+- Time-invariant and time-varying CBMSM weight estimation.
+- Comparison of CBPS-based stabilized weights against GLM weights.
 
-3. `npcbps_basic.py` - Nonparametric CBPS
-   - Empirical likelihood-based weight estimation
-   - Convergence diagnostics
-   - 150 lines
+**Files**: `replicate_imai_ratkovic_2015.py`, `replicate_imai_ratkovic_2015.ipynb`
 
-4. `hdcbps_basic.py` - High-Dimensional CBPS
-   - **REQUIRES:** `glmnetforpython` package
-   - LASSO variable selection for p >> n
-   - Sparse propensity score models
-   - 150 lines
+### 4. `run_replication.py` — Standalone Kang-Schafer Runner
 
-5. `cbiv_basic.py` - Instrumental Variables
-   - Two-sided and one-sided noncompliance
-   - MLE vs. GMM estimation methods
-   - CACE (Complier Average Causal Effect) estimation
-   - 287 lines
-
-6. `asyvar_comprehensive_demo.py` - Asymptotic variance estimation
-   - Treatment effect confidence intervals
-   - Accounts for propensity score estimation uncertainty
-   - Optimal CBPS (oCBPS) variance
-
-### Diagnostic Functions
-
-7. `balance_basic.py` - Balance assessment for binary treatment
-   - Standardized mean differences (SMD)
-   - Weighted vs. unweighted balance comparison
-   - Balance table for publication
-   - 150 lines
-
-8. `balance_continuous.py` - Balance for continuous treatment
-   - Pearson correlations as balance metric
-   - F-statistic for overall balance
-   - Interpretation guidelines
-   - 150 lines
-
-9. `plot_cbps.py` - Visualization for binary treatment
-   - Scatter plots: propensity score vs. covariates
-   - Box plots: covariate distributions by treatment
-   - Propensity score overlap diagnostics
-   - 150 lines
-
-10. `plot_continuous.py` - Visualization for continuous treatment
-    - Correlation plots (weighted vs. unweighted)
-    - Treatment and weight distribution plots
-    - Custom plot styling examples
-    - 150 lines
-
-### Inference Functions
-
-11. `vcov_outcome_basic.py` - Outcome model variance adjustment
-    - Robust variance estimation for weighted regression
-    - Comparison with naive standard errors
-    - Binary and continuous treatment examples
-    - 150 lines
-
-12. `vcov_cbps.py` - Propensity score coefficient variance
-    - Variance-covariance matrix extraction
-    - Standard errors and confidence intervals
-    - Correlation structure and eigenvalue decomposition
-    - 150 lines
-
-13. `summary_cbps.py` - Statistical summaries
-    - Coefficient table with p-values
-    - J-statistic interpretation
-    - Convergence diagnostics and weight summary
-    - 150 lines
-
-**Total: 13 basic examples**
-
-## Advanced Examples (Planned)
-
-More complex use cases and best practices (upcoming in future releases):
-
-1. **`advanced_ate_att_comparison.py`** - ATE vs. ATT comparison
-2. **`advanced_optimal_cbps.py`** - Optimal CBPS (oCBPS) with doubly-robust estimation
-3. **`advanced_sensitivity_analysis.py`** - Sensitivity to unobserved confounding
-4. **`advanced_subgroup_analysis.py`** - Heterogeneous treatment effects
-5. **`advanced_multiple_treatments.py`** - Multi-valued treatment analysis
+Self-contained command-line script that runs the Kang-Schafer simulation
+portion of the Imai & Ratkovic (2014) replication. Useful for smoke testing
+the package without opening a notebook.
 
 ## Quick Start
 
 ### Running Python Scripts
 
 ```bash
-# Navigate to examples directory
-cd examples
-
-# Run any example
-python cbps_basic.py
-python cbmsm_basic.py
-python balance_basic.py
+# From the repository root
+python examples/replicate_imai_ratkovic_2014.py
+python examples/replicate_fong_hazlett_imai_2018.py
+python examples/replicate_imai_ratkovic_2015.py
 ```
 
 ### Running Jupyter Notebooks
@@ -167,46 +85,43 @@ pip install jupyter
 # Start Jupyter
 jupyter notebook
 
-# Open any tutorial_*.ipynb file
+# Open any replicate_*.ipynb file in the examples/ directory
 ```
 
 ## Data Requirements
 
-All examples use built-in datasets from `cbps.datasets`:
+All replications use datasets bundled with the package under
+`cbps.datasets`:
 
-- **LaLonde**: `load_lalonde()` - Job training program evaluation
-- **Blackwell**: `load_blackwell()` - Longitudinal political data
-- **Political Ads**: `load_political_ads()` - Continuous treatment data
-- **Simulations**: Various simulation datasets for testing
+- `load_lalonde()` — LaLonde (1986) NSW job training data.
+- `load_lalonde_psid_combined()` — NSW treated + PSID control merged sample.
+- `load_blackwell()` — Blackwell (2013) longitudinal political data.
+- `load_political_ads()` — Urban & Niebler (2014) county-level advertising data.
+- `load_continuous_simulation()` — Fong et al. (2018) simulation DGPs.
+- `load_npcbps_continuous_sim()` — Simulation data for npCBPS validation.
 
-No external data files required!
+No external data files are required.
 
-## Important Notes
+## Notes on Reproducibility
 
-### hdCBPS Dependency
-
-hdCBPS **requires** the `glmnetforpython` package:
-
-```bash
-pip install glmnetforpython
-```
-
-**Apple Silicon (M1/M2/M3) users:**
-```bash
-brew install gcc
-export FC=gfortran
-pip install glmnetforpython
-```
+- Monte Carlo portions use a reduced number of replications (e.g.,
+  `n_sim = 20` in the notebook, compared to the 500 in the paper) so the
+  notebooks run end-to-end in a few minutes. Exact numerical agreement with
+  the published figures is not expected — trends and qualitative rankings
+  across estimators should match.
+- npCBPS performs empirical-likelihood optimization whose objective is
+  non-convex; results may vary slightly across runs or platforms.
+- hdCBPS requires the optional `glmnetforpython` package (see the
+  Installation guide for Apple Silicon instructions).
 
 ## Documentation
 
-For complete API documentation, see:
-
-- **API Reference:** `docs/api/`
-- **README:** `../README.md`
-- **Online Documentation:** https://cbps-python.readthedocs.io
+- **Online documentation**: <https://cbps-python.readthedocs.io>
+- **Top-level README**: [`../README.md`](../README.md)
+- **API reference**: built from source docstrings under `docs/api/` and
+  rendered at <https://cbps-python.readthedocs.io>.
 
 ## License
 
-Same as CBPS Python package (GPL-2+)
+Same as the CBPS Python package (AGPL-3.0-or-later).
 

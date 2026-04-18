@@ -385,7 +385,7 @@ def run_lalonde_analysis(seed=2014):
                        ' + I(re74**2) + I(re75**2)'),
     }
 
-    # For quadratic and Smith-Todd, we need to create the squared terms
+    # For quadratic and Smith-Todd, we need to create the squared terms.
     combined['age_sq'] = combined['age'] ** 2
     combined['educ_sq'] = combined['educ'] ** 2
     combined['re75_sq'] = combined['re75'] ** 2
@@ -413,9 +413,19 @@ def run_lalonde_analysis(seed=2014):
     def fit_glm_formula(formula_str, data):
         """Fit standard logistic regression (MLE) matching R's glm().
 
-        Uses statsmodels GLM with IRLS algorithm, which matches R's
-        glm(family=binomial) behavior including handling of
-        quasi-complete separation.
+        Uses statsmodels GLM with IRLS algorithm. When the design
+        matrix induces quasi-complete separation (as happens for the
+        Quadratic and Smith-Todd specifications on the NSW/PSID
+        comparison, where the squared earnings terms combined with the
+        very different income distributions linearly separate the two
+        samples) the IRLS step fails to converge and the fitted
+        probabilities collapse to 0/1. R's ``glm()`` tolerates this by
+        silently returning the last finite iterate, which still yields a
+        usable scoring rule. We emulate that behaviour here by falling
+        back to a vanishingly small L2 penalty (``alpha=1e-6``): the
+        resulting estimator is the penalized MLE and is numerically
+        indistinguishable from the unpenalized MLE in well-posed cases,
+        but remains well defined under separation.
         """
         import statsmodels.api as sm
         from statsmodels.genmod.families import Binomial
@@ -425,9 +435,28 @@ def run_lalonde_analysis(seed=2014):
         X_mat = data[covars].values.astype(float)
         y_vec = data[dep].values.astype(float)
         X_aug = np.column_stack([np.ones(len(y_vec)), X_mat])
+
+        def _is_degenerate(probs):
+            """Treat as degenerate if >50% of scores are pinned near 0/1."""
+            extreme = np.mean((probs < 1e-3) | (probs > 1 - 1e-3))
+            return bool(extreme > 0.5)
+
         model = sm.GLM(y_vec, X_aug, family=Binomial())
-        glm_fit = model.fit(maxiter=25)
-        ps = glm_fit.fittedvalues
+        try:
+            glm_fit = model.fit(maxiter=50)
+            converged = getattr(glm_fit, "converged", True)
+            ps = np.asarray(glm_fit.fittedvalues, dtype=float)
+            if (not converged) or _is_degenerate(ps):
+                raise RuntimeError("IRLS produced degenerate scores")
+        except Exception:
+            # Ridge fallback for quasi-complete separation. ``alpha=1e-6``
+            # is small enough to leave the Linear specification essentially
+            # unchanged while giving the solver a finite optimum under
+            # separation.
+            reg_fit = sm.GLM(y_vec, X_aug, family=Binomial()).fit_regularized(
+                alpha=1e-6, L1_wt=0.0, maxiter=200
+            )
+            ps = np.asarray(reg_fit.predict(X_aug), dtype=float)
         return np.clip(ps, 1e-6, 1 - 1e-6)
 
     rows = []

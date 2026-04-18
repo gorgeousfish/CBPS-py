@@ -21,8 +21,8 @@ Closes #(issue number)
 - [ ] Numerical precision tests pass (±1e-6 against R CBPS)
 - [ ] Documentation updated (docstrings, README, API docs)
 - [ ] CHANGELOG.md updated under `[Unreleased]`
-- [ ] All CI checks pass
-- [ ] No new security warnings from bandit
+- [ ] Local pre-commit hooks pass (`black`, `isort`, `flake8`, `mypy`, `bandit`)
+- [ ] Full test suite passes locally (`pytest tests/ -m "not slow"`)
 
 ## Additional Notes
 

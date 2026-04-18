@@ -216,13 +216,13 @@ class TestHdCBPSOptionalExports:
         """HD-INIT-008: hdCBPS is in __all__ when glmnetforpython is available."""
         from cbps import highdim
         
-        # Check if glmnet is available
+        # Check if glmnetforpython is available (import name matches package name)
         try:
-            import glmnet
+            import glmnetforpython  # noqa: F401
             has_glmnet = True
         except ImportError:
             has_glmnet = False
-        
+
         if has_glmnet:
             assert 'hdCBPS' in highdim.__all__
             assert 'HDCBPSResults' in highdim.__all__

@@ -37,7 +37,7 @@ advertisements. The Annals of Applied Statistics, 12(1), 156-177.
 https://doi.org/10.1214/17-AOAS1101
 """
 
-from typing import Optional, Any, Union
+from typing import Optional, Any, Tuple, Union
 import numpy as np
 import pandas as pd
 import scipy.optimize
@@ -60,10 +60,24 @@ class NPCBPSSummary:
         String representation of the function call.
     n : int
         Total sample size.
-    n_treat : int
-        Number of treated units.
-    n_control : int
-        Number of control units.
+    treatment_type : {"binary", "continuous", "unknown"}
+        ``"binary"`` when the treatment vector takes only values in ``{0, 1}``;
+        ``"continuous"`` otherwise. npCBPS internally treats any numeric
+        treatment (including ``0/1``) as continuous during estimation, but
+        the summary still respects the original treatment type when
+        describing sample composition.
+    n_treat : int or None
+        Number of treated units (``y == 1``). Populated only when
+        ``treatment_type == "binary"``.
+    n_control : int or None
+        Number of control units (``y == 0``). Populated only when
+        ``treatment_type == "binary"``.
+    treatment_range : tuple of (float, float) or None
+        ``(min, max)`` of the treatment vector. Populated only when
+        ``treatment_type == "continuous"``.
+    treatment_mean : float or None
+        Arithmetic mean of the treatment vector. Populated only when
+        ``treatment_type == "continuous"``.
     converged : bool or None
         Whether the optimization converged.
     iterations : int or None
@@ -105,15 +119,35 @@ class NPCBPSSummary:
         self.eta = eta
         self.weights = weights
 
-        # Derived sample info
+        # Derived sample info.
+        # npCBPS supports both binary and continuous treatments (see npcbps_fit:
+        # any numeric treatment is routed through the continuous path). The
+        # ``Treatment/Control group`` split is only meaningful when the treatment
+        # is 0/1 binary; for continuous treatments we record the range instead.
+        self.treatment_type: str = "unknown"
+        self.n_treat: Optional[int] = None
+        self.n_control: Optional[int] = None
+        self.treatment_range: Optional[Tuple[float, float]] = None
+        self.treatment_mean: Optional[float] = None
         if y is not None:
-            self.n = len(y)
-            self.n_treat = int(y.sum()) if hasattr(y, 'sum') else 0
-            self.n_control = self.n - self.n_treat
+            y_arr = np.asarray(y)
+            self.n = int(y_arr.shape[0])
+            unique_vals = np.unique(y_arr[~np.isnan(y_arr)]) if y_arr.dtype.kind in "fc" else np.unique(y_arr)
+            is_binary = (
+                self.n > 0
+                and unique_vals.size <= 2
+                and np.all(np.isin(unique_vals, [0, 1]))
+            )
+            if is_binary:
+                self.treatment_type = "binary"
+                self.n_treat = int(y_arr.sum())
+                self.n_control = self.n - self.n_treat
+            else:
+                self.treatment_type = "continuous"
+                self.treatment_range = (float(np.nanmin(y_arr)), float(np.nanmax(y_arr)))
+                self.treatment_mean = float(np.nanmean(y_arr))
         else:
             self.n = 0
-            self.n_treat = 0
-            self.n_control = 0
 
     def __str__(self) -> str:
         """Return formatted summary text.
@@ -135,8 +169,20 @@ class NPCBPSSummary:
         # Sample information
         if self.n > 0:
             lines.append(f"Sample size: {self.n}")
-            lines.append(f"  Treatment group: {self.n_treat} ({100*self.n_treat/self.n:.1f}%)")
-            lines.append(f"  Control group:   {self.n_control} ({100*self.n_control/self.n:.1f}%)")
+            if self.treatment_type == "binary" and self.n_treat is not None:
+                lines.append(
+                    f"  Treatment group: {self.n_treat} ({100*self.n_treat/self.n:.1f}%)"
+                )
+                lines.append(
+                    f"  Control group:   {self.n_control} ({100*self.n_control/self.n:.1f}%)"
+                )
+            elif self.treatment_type == "continuous" and self.treatment_range is not None:
+                lo, hi = self.treatment_range
+                mean = self.treatment_mean
+                lines.append(f"  Treatment: continuous")
+                lines.append(
+                    f"  Range: [{lo:.4f}, {hi:.4f}]  Mean: {mean:.4f}"
+                )
             lines.append("")
 
         # Convergence diagnostics

@@ -7,11 +7,11 @@ of the average treatment effect (ATE) under binary treatment.
 
 Two variance formulas are implemented:
 
-- **oCBPS**: Semiparametric efficiency bound (Corollary 2.2 of Fan et al., 2022),
+- **oCBPS**: Semiparametric efficiency bound (Fan et al., 2022),
   which attains the Hahn (1998) efficiency bound when both the propensity score
   and outcome models are correctly specified.
 
-- **CBPS**: Full sandwich variance (Theorem 2.1 of Fan et al., 2022), accounting
+- **CBPS**: Full sandwich variance (Fan et al., 2022), accounting
   for estimation uncertainty in propensity score parameters via the GMM
   asymptotic variance formula.
 
@@ -72,8 +72,8 @@ def asy_var(
     method : {'CBPS', 'oCBPS'}, default='CBPS'
         Variance estimation method:
 
-        - 'CBPS': Full sandwich formula (Theorem 2.1 of Fan et al., 2022)
-        - 'oCBPS': Semiparametric efficiency bound (Corollary 2.2)
+        - 'CBPS': Full sandwich formula (Fan et al., 2022)
+        - 'oCBPS': Semiparametric efficiency bound (Fan et al., 2022)
 
     X : ndarray of shape (n, p), optional
         Covariate matrix with intercept column. Extracted from CBPS_obj
@@ -135,7 +135,7 @@ def asy_var(
     are fitted via OLS on the treatment and control groups respectively.
     
     The oCBPS variance attains the semiparametric efficiency bound
-    (Hahn, 1998, Theorem 1; Fan et al., 2022, Corollary 2.2, Eq. 2.6):
+    (Hahn, 1998; Fan et al., 2022, Eq. 2.6):
 
     .. math::
 
@@ -145,8 +145,7 @@ def asy_var(
     where L(X) = E[Y(1) - Y(0) | X] is the conditional average treatment
     effect.
 
-    The CBPS variance uses the sandwich formula (Fan et al., 2022,
-    Theorem 2.1, Eq. 2.4):
+    The CBPS variance uses the sandwich formula (Fan et al., 2022, Eq. 2.4):
 
     .. math::
 
@@ -368,8 +367,8 @@ def _compute_asy_var_ocbps(
     """
     Compute variance using the semiparametric efficiency bound.
 
-    Implements Corollary 2.2 and Eq. 2.6 of Fan et al. (2022), which
-    attains the Hahn (1998) efficiency bound.
+    Implements the semiparametric efficiency-bound variance (Eq. 2.6) of
+    Fan et al. (2022), which attains the Hahn (1998) efficiency bound.
 
     Parameters
     ----------
@@ -449,9 +448,9 @@ def _compute_asy_var_cbps(
     """
     Compute variance using the sandwich formula.
 
-    Implements Theorem 2.1 of Fan et al. (2022). The asymptotic variance
-    is V = H_bar' Sigma H_bar (Eq. 2.4), where Sigma is the joint
-    variance-covariance matrix defined in Eq. 2.3.
+    Implements the sandwich variance formula of Fan et al. (2022). The
+    asymptotic variance is V = H_bar' Sigma H_bar (Eq. 2.4), where Sigma
+    is the joint variance-covariance matrix defined in Eq. 2.3.
 
     Parameters
     ----------
@@ -554,7 +553,7 @@ def _compute_asy_var_cbps(
             RuntimeWarning
         )
 
-    # Assemble V = H_bar' Sigma H_bar per Theorem 2.1
+    # Assemble V = H_bar' Sigma H_bar per Fan et al. (2022)
     # Computed as: Sigma_mu + H_y' Sigma_beta H_y + 2 H_y' Sigma_mu_beta
     term1 = Sigma_mu_hat
 

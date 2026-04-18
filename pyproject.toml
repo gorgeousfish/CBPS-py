@@ -9,11 +9,11 @@ description = "Covariate Balancing Propensity Score (CBPS) for causal inference 
 readme = "README.md"
 license = {text = "AGPL-3.0"}
 authors = [
-    {name = "Cai Xuanyu", email = "xuanyuCAI@outlook.com"},
-    {name = "Xu Wenli", email = "wlxu@cityu.edu.mo"},
+    {name = "Xuanyu Cai", email = "xuanyuCAI@outlook.com"},
+    {name = "Wenli Xu", email = "wlxu@cityu.edu.mo"},
 ]
 maintainers = [
-    {name = "Cai Xuanyu", email = "xuanyuCAI@outlook.com"},
+    {name = "Xuanyu Cai", email = "xuanyuCAI@outlook.com"},
 ]
 keywords = [
     "causal-inference",

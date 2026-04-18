@@ -189,8 +189,10 @@ pytest
 # Run with coverage
 pytest --cov=cbps --cov-report=html
 
-# Run specific test file
-pytest tests/test_cbps.py
+# Run a specific test file or sub-suite
+pytest tests/binary/test_unit.py
+pytest tests/continuous/
+pytest tests/integration/
 
 # Run tests with specific markers
 pytest -m "not slow"  # Skip slow tests
@@ -261,7 +263,8 @@ def test_cbps_matches_r():
    ```
 
 6. **PR Requirements**:
-   - All CI checks pass (GitHub Actions)
+   - Local pre-commit hooks pass (`black`, `isort`, `flake8`, `mypy`, `bandit`)
+   - Full test suite passes locally: `pytest tests/ -m "not slow"`
    - Code coverage does not decrease
    - No new linter warnings
    - Numerical tests pass (±1e-6 precision)
@@ -275,8 +278,8 @@ def test_cbps_matches_r():
 
 ## Maintainers
 
-- **Cai Xuanyu** - xuanyuCAI@outlook.com
-- **Xu Wenli** - wlxu@cityu.edu.mo
+- **Xuanyu Cai** - xuanyuCAI@outlook.com
+- **Wenli Xu** - wlxu@cityu.edu.mo
 
 ## Attribution
 

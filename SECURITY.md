@@ -12,8 +12,8 @@ If you discover a security vulnerability, please report it responsibly:
 
 1. **Do NOT** open a public GitHub issue.
 2. Email the maintainers directly:
-   - Cai Xuanyu: xuanyuCAI@outlook.com
-   - Xu Wenli: wlxu@cityu.edu.mo
+   - Xuanyu Cai: xuanyuCAI@outlook.com
+   - Wenli Xu: wlxu@cityu.edu.mo
 3. Include:
    - A description of the vulnerability
    - Steps to reproduce

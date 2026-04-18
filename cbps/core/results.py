@@ -430,12 +430,18 @@ class CBPSResults:
         Returns
         -------
         dict
-            Dictionary containing balance statistics:
-            
-            - 'balanced': Weighted covariate balance measures
-            - 'original' or 'unweighted': Unweighted baseline measures
-            
-            See ``cbps.balance()`` documentation for full details.
+            Dictionary containing balance statistics. Keys depend on the
+            treatment type:
+
+            - Binary / multi-valued: ``'balanced'`` and ``'original'``
+              (standardised mean differences).
+            - Continuous: ``'balanced'`` and ``'unweighted'``
+              (absolute Pearson correlations).
+
+            See ``cbps.balance()`` documentation for full details. For CBMSM
+            results, use ``CBMSMResults.balance()`` which instead returns
+            capitalised keys (``'Balanced'`` / ``'Unweighted'`` / ``'StatBal'``)
+            to mirror the R CBPS package.
         
         Examples
         --------
@@ -591,8 +597,14 @@ class CBPSResults:
             New data for prediction. If None, returns fitted values from
             the training data.
             
-            - DataFrame: Required when using formula interface
-            - ndarray: Shape (n_new, k) matching the training covariates
+            - DataFrame: Required when the model was fit with the formula
+              interface; the stored patsy ``DesignInfo`` is used to build
+              the new design matrix (intercept added automatically).
+            - ndarray: Must have the same number of columns as ``self.x``,
+              **including the intercept column** if one was added during
+              fitting. The column ordering must also match the design matrix
+              used at fitting time. Passing a matrix that is missing the
+              intercept will raise ``ValueError``.
         
         type : {'response', 'link'}, default='response'
             Type of prediction:

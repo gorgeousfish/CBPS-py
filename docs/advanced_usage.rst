@@ -43,35 +43,67 @@ Parameter                Description                    Example
 Object Methods
 ~~~~~~~~~~~~~~
 
-======================== ============================== =========================
+======================== ============================== ==============================
 Method                   Description                    Usage
-======================== ============================== =========================
+======================== ============================== ==============================
 ``fit.summary()``        Statistical summary            ``print(fit.summary())``
 ``fit.vcov()``           Variance-covariance matrix     ``vcov = fit.vcov()``
 ``print(fit)``           String representation          ``print(fit)``
-``fit.predict()``        Propensity score prediction    ``ps = fit.predict(X)``
-======================== ============================== =========================
+``fit.predict()`` (*)    Propensity score prediction    ``ps = fit.predict(newdata=new_df)``
+``fit.balance()``        Balance diagnostics            ``bal = fit.balance()``
+``fit.plot()`` (**)      Diagnostic plots               ``fit.plot(kind='deviance')``
+======================== ============================== ==============================
+
+(*) :meth:`~cbps.core.results.CBPSResults.predict` takes a keyword argument
+``newdata`` (default ``None``, which reuses the training sample) and
+``type`` (``'response'`` or ``'link'``). Pass a ``pd.DataFrame`` with the
+same columns as the fitted ``formula`` to score a new sample.
+
+(**) ``kind`` currently supports only ``'deviance'``; other values raise
+``ValueError``. Deviance plots are only defined for binary treatment.
 
 Standalone Functions
 ~~~~~~~~~~~~~~~~~~~~
 
-======================== ============================== =========================
-Function                 Description                    Usage
-======================== ============================== =========================
-``cbps.balance(fit)``    Balance assessment             ``bal = cbps.balance(fit)``
-``cbps.plot_cbps(fit)``  Diagnostic visualization       ``cbps.plot_cbps(fit)``
-======================== ============================== =========================
+.. list-table::
+   :header-rows: 1
+   :widths: 35 45 40
+
+   * - Function
+     - Description
+     - Usage
+   * - ``cbps.balance(fit)``
+     - Covariate balance assessment
+     - ``bal = cbps.balance(fit)``
+   * - ``cbps.AsyVar(Y, CBPS_obj=fit)``
+     - Asymptotic variance / CI for the ATE
+     - ``result = cbps.AsyVar(Y=Y, CBPS_obj=fit)``
+   * - ``cbps.vcov_outcome(fit, Y, Z, delta)``
+     - Adjusted vcov for weighted outcome regression
+     - ``V = cbps.vcov_outcome(fit, Y, Z, delta)``
+   * - ``cbps.plot_cbps(fit)``
+     - Love plot (binary / multi-valued)
+     - ``cbps.plot_cbps(fit)``
+   * - ``cbps.plot_cbps_continuous(fit)``
+     - Weighted-correlation plot (continuous)
+     - ``cbps.plot_cbps_continuous(fit)``
+   * - ``cbps.plot_cbmsm(fit)``
+     - Balance plot for marginal structural models
+     - ``cbps.plot_cbmsm(fit)``
+   * - ``cbps.plot_npcbps(fit)``
+     - Balance plot for nonparametric CBPS
+     - ``cbps.plot_npcbps(fit)``
 
 Data Structures
 ~~~~~~~~~~~~~~~
 
-======================== ============================== =========================
+======================== ============================== =============================================
 Type                     Description                    Notes
-======================== ============================== =========================
+======================== ============================== =============================================
 ``pd.DataFrame``         Primary data input             Required for formula interface
 ``np.ndarray``           Array interface input          For direct array input
-``pd.Categorical``       Categorical treatment          Auto-detected if ≤4 unique values
-======================== ============================== =========================
+``pd.Categorical``       Categorical treatment          Required for multi-valued (3–4 level) treatment
+======================== ============================== =============================================
 
 Code Examples
 -------------
@@ -158,6 +190,56 @@ Example 3: Marginal Structural Model (CBMSM)
     # Access weights
     print(f"Weight range: [{fit.weights.min():.2f}, {fit.weights.max():.2f}]")
 
+Example 4: scikit-learn Integration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`cbps.sklearn.CBPSEstimator` wraps the binary / multi-valued
+``CBPS()`` estimator as a sklearn-compatible classifier so it can sit inside
+a :class:`~sklearn.pipeline.Pipeline` together with standard preprocessors.
+
+.. code-block:: python
+
+    import numpy as np
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.linear_model import LinearRegression
+
+    from cbps.sklearn import CBPSEstimator
+    from cbps.datasets import load_lalonde
+
+    df = load_lalonde()
+    covs = ['age', 'educ', 'black', 'hisp', 'married',
+            'nodegr', 're74', 're75']
+    X = df[covs].values
+    T = df['treat'].values
+    Y = df['re78'].values
+
+    pipe = Pipeline([
+        ('scaler', StandardScaler()),
+        ('cbps', CBPSEstimator(att=0, method='over')),
+    ])
+    pipe.fit(X, T)
+
+    est = pipe.named_steps['cbps']
+    print(f"Converged: {est.cbps_result_.converged}")
+
+    # Retrieve IPW weights for a downstream weighted outcome regression
+    w = est.get_weights()
+    ate_model = LinearRegression().fit(T.reshape(-1, 1), Y, sample_weight=w)
+    print(f"IPW-weighted ATE: {ate_model.coef_[0]:.2f}")
+
+.. warning::
+
+   :meth:`~cbps.sklearn.CBPSEstimator.predict_proba` and
+   :meth:`~cbps.sklearn.CBPSEstimator.predict` only return the stored
+   training-sample propensity scores; they raise :class:`ValueError` on
+   arrays with a different sample count. As a consequence,
+   :class:`~sklearn.model_selection.GridSearchCV` and
+   :func:`~sklearn.model_selection.cross_val_score` with default scoring do
+   **not** produce meaningful test-fold scores. For out-of-sample
+   propensity-score prediction, use the formula-interface result's
+   :meth:`cbps.core.results.CBPSResults.predict` method instead.
+
 Numerical Considerations
 ------------------------
 
@@ -230,8 +312,10 @@ Common Usage Patterns
 Intercept Handling
 ~~~~~~~~~~~~~~~~~~
 
-The formula interface automatically adds an intercept term. When using the
-array interface, add the intercept manually:
+The formula interface adds an intercept automatically via patsy. The array
+interface also adds an intercept automatically if the first column of
+``covariates`` is not a constant vector. Supplying an intercept column
+explicitly is equivalent:
 
 .. code-block:: python
 
@@ -239,15 +323,24 @@ array interface, add the intercept manually:
     import numpy as np
     from cbps.datasets import load_lalonde
 
-    # Formula interface (automatic intercept)
     df = load_lalonde(dehejia_wahba_only=True)
-    fit = cbps.CBPS('treat ~ age + educ', data=df)
 
-    # Array interface (manual intercept required)
+    # Formula interface (automatic intercept via patsy)
+    fit_formula = cbps.CBPS('treat ~ age + educ', data=df)
+
+    # Array interface — intercept is inserted automatically
     treat = df['treat'].values
     X = df[['age', 'educ']].values
+    fit_auto = cbps.CBPS(treatment=treat, covariates=X)
+
+    # Array interface — intercept supplied explicitly
     X_with_intercept = np.column_stack([np.ones(len(treat)), X])
-    fit_array = cbps.CBPS(treatment=treat, covariates=X_with_intercept)
+    fit_manual = cbps.CBPS(treatment=treat, covariates=X_with_intercept)
+
+.. note::
+   The auto-insertion only triggers when no constant column is detected. Pass
+   ``verbose=1`` to see a ``UserWarning`` when an intercept is added on your
+   behalf.
 
 Treatment Type Detection
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -371,8 +464,8 @@ for internal use only and their signatures may change without notice.
 Additional Resources
 --------------------
 
-- **API Documentation**: See :doc:`api/index` for complete function signatures
-- **Tutorials**: See :doc:`tutorials/index` for step-by-step guides
+- **API Documentation**: See :doc:`api/index` for the autodoc-generated API reference
+- **Tutorials**: See :doc:`tutorials/index` for the three replication tutorials
 - **Theory**: See :doc:`theory` for mathematical background
 
 Getting Help
@@ -382,7 +475,7 @@ If you encounter issues:
 
 1. Check the :doc:`quickstart` guide
 2. Review the troubleshooting section in ``README.md``
-3. Consult the :doc:`api/index` documentation
+3. Consult the :doc:`api/index` reference
 4. Open an issue on GitHub with:
 
    - Code that reproduces the issue
@@ -392,12 +485,22 @@ If you encounter issues:
 Summary
 -------
 
-======================== ================================================
-Feature                  Description
-======================== ================================================
-Parameter naming         Snake_case convention (e.g., ``att``, ``two_step``)
-Object methods           ``fit.summary()``, ``fit.vcov()``
-Standalone functions     ``cbps.balance(fit)``, ``cbps.plot_cbps(fit)``
-Data structures          ``pd.DataFrame``, ``np.ndarray``
-Treatment detection      Automatic based on data characteristics
-======================== ================================================
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Feature
+     - Description
+   * - Parameter naming
+     - Snake_case convention (e.g., ``att``, ``two_step``)
+   * - Object methods
+     - ``fit.summary()``, ``fit.vcov()``, ``fit.predict()``
+   * - Standalone functions
+     - ``cbps.balance(fit)``, ``cbps.AsyVar(Y, CBPS_obj=fit)``,
+       ``cbps.vcov_outcome(fit, Y, Z, delta)``,
+       ``cbps.plot_cbps(fit)``, ``cbps.plot_cbps_continuous(fit)``,
+       ``cbps.plot_cbmsm(fit)``, ``cbps.plot_npcbps(fit)``
+   * - Data structures
+     - ``pd.DataFrame``, ``np.ndarray``, ``pd.Categorical``
+   * - Treatment detection
+     - Automatic based on data characteristics

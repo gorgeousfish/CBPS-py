@@ -65,7 +65,9 @@ The formula interface accepts patsy-style formulas with pandas DataFrames:
 Array Interface
 ^^^^^^^^^^^^^^^
 
-NumPy arrays can be used directly:
+NumPy arrays can be used directly. The intercept column is added automatically
+when the first column is not a constant vector, but providing one explicitly
+is also accepted:
 
 .. code-block:: python
 
@@ -81,15 +83,16 @@ NumPy arrays can be used directly:
        np.random.normal(12, 3, n)      # education
    ])
 
-   # Add intercept column for array interface
-   X_with_intercept = np.column_stack([np.ones(n), X])
-
-   # Estimate CBPS
+   # Estimate CBPS — intercept is inserted for you
    fit = CBPS(
        treatment=treat,
-       covariates=X_with_intercept,
+       covariates=X,
        att=1
    )
+
+   # Equivalent: supply the intercept column explicitly
+   X_with_intercept = np.column_stack([np.ones(n), X])
+   fit_alt = CBPS(treatment=treat, covariates=X_with_intercept, att=1)
 
 Common Tasks
 ------------
@@ -316,7 +319,7 @@ hdCBPS combines CBPS with LASSO penalization:
    )
 
    print(f"ATE estimate: {fit.ATE:.3f}")
-   print(f"Standard error: {fit.s:.3f}")
+   print(f"Standard error of ATE: {fit.s:.3f}")
 
 .. note::
 

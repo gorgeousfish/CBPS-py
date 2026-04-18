@@ -6,11 +6,20 @@ This document provides important implementation details and technical considerat
 Numerical Precision
 -------------------
 
-The package maintains high numerical precision across all estimation methods:
+The package is validated against the reference R ``CBPS`` implementation
+(v0.23). Agreement tolerances observed in the test suite are:
 
-- **Binary/Multi-valued CBPS**: Coefficients and weights precise to ±1e-6
-- **Continuous CBPS**: GPS estimation with correlation-based balance
-- **High-dimensional matrices**: Robust SVD-based operations for ill-conditioned cases
+- **Binary / Multi-valued CBPS**: coefficients and weights within ±1e-6;
+  Hansen's J-statistic within ±1e-4; asymptotic standard errors within
+  ±1e-5.
+- **Continuous CBPS**: coefficients and weights within ±1e-6; weighted
+  correlations with covariates and ATE estimates within ±1e-4.
+- **CBMSM / CBIV / npCBPS / hdCBPS**: weights and point estimates
+  validated within ±1e-6 (or the tightest tolerance the underlying
+  optimizer supports; see individual test files under ``tests/``).
+- **High-dimensional / ill-conditioned designs**: the package falls back
+  to SVD-based solves and pinv regularisation when the design matrix is
+  near-singular, to keep the reported agreement bands stable.
 
 npCBPS: Empirical Likelihood Optimization
 ------------------------------------------
@@ -61,25 +70,44 @@ The ``hdCBPS`` function uses cross-validation for LASSO variable selection. For 
 Automatic Treatment Type Detection
 ----------------------------------
 
-The package automatically detects treatment type from the data:
+The package detects treatment type from the data but applies different rules
+to binary versus multi-valued cases:
 
-- **Discrete treatment**: Integer arrays with ≤4 unique values
-- **Continuous treatment**: Arrays with >4 unique values or floating-point type
+- **Binary treatment**: Arrays with exactly two unique values that are a subset
+  of :math:`\{0, 1\}` (integer, boolean, or floating-point) are auto-detected
+  and routed to the binary backend. Float 0/1 arrays are accepted but trigger a
+  ``UserWarning`` recommending explicit ``int`` or ``pd.Categorical``
+  representation.
+- **Multi-valued treatment (3–4 levels)**: Must be an explicit
+  ``pd.Categorical`` (or categorical dtype in a DataFrame). Numeric arrays
+  with 3–4 unique values are **not** auto-detected as categorical; they are
+  treated as continuous and a warning is issued recommending explicit
+  conversion.
+- **Continuous treatment**: Any numeric array not matching the binary
+  criterion above (including floating-point arrays and integer arrays with
+  more than two distinct values that are not wrapped in ``pd.Categorical``).
 
-**Example:**
+**Examples:**
 
 .. code-block:: python
 
    import numpy as np
+   import pandas as pd
    from cbps import CBPS
-   
-   # Integer array with 3 unique values → Discrete treatment
-   treat = np.array([0, 1, 2, 0, 1, 2] * 30)
-   fit = CBPS(treatment=treat, covariates=X, att=1)
-   
-   # Floating-point array → Continuous treatment
+
+   # Auto-detected as binary
+   treat_binary = np.array([0, 1, 0, 1, 1, 0] * 30)
+   fit_bin = CBPS(treatment=treat_binary, covariates=X, att=1)
+
+   # Multi-valued: MUST be pd.Categorical; prefer the formula interface
+   df = pd.DataFrame({'treat': pd.Categorical([0, 1, 2] * 60),
+                      'x1': np.random.randn(180),
+                      'x2': np.random.randn(180)})
+   fit_multi = CBPS(formula='treat ~ x1 + x2', data=df, att=0)
+
+   # Continuous treatment (float array)
    treat_cont = np.random.uniform(0, 10, 180)
-   fit = CBPS(treatment=treat_cont, covariates=X, att=0)
+   fit_cont = CBPS(treatment=treat_cont, covariates=X, att=0)
 
 CBMSM: Time-Invariant Parameters
 --------------------------------

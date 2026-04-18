@@ -260,7 +260,7 @@ def standardize_weights(
     sample_weights : np.ndarray
         Sampling weights (normalized to sum to n), shape (n,).
     att : int, default=0
-        Target estimand: 0=ATE, 1=ATT, 2=ATT with reversed encoding.
+        Target estimand: 0 = ATE, 1 = ATT (T=1 as treated), 2 = ATT (T=0 as treated).
     standardize : bool, default=True
         If True, apply group-wise normalization.
         If False, return Horvitz-Thompson weights.

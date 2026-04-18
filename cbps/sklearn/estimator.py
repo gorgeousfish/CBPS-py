@@ -3,12 +3,23 @@ scikit-learn Compatible CBPS Estimator
 ======================================
 
 This module provides a scikit-learn compatible wrapper for the CBPS estimator,
-enabling seamless integration with the sklearn ecosystem including Pipeline,
-GridSearchCV, and cross-validation utilities.
+allowing the binary / multi-valued CBPS fit to sit inside a
+:class:`~sklearn.pipeline.Pipeline` alongside standard preprocessors.
 
 The wrapper exposes CBPS functionality through the standard sklearn API
-(fit, predict, predict_proba) while preserving access to CBPS-specific
-outputs such as propensity score weights for inverse probability weighting.
+(``fit``, ``predict``, ``predict_proba``, ``score``) while preserving access
+to CBPS-specific outputs such as the propensity-score weights needed for
+inverse probability weighting.
+
+.. note::
+   ``predict_proba`` and ``predict`` only return the stored training-sample
+   propensity scores and raise ``ValueError`` on arrays with a different
+   sample count. As a result, ``GridSearchCV`` / ``RandomizedSearchCV`` /
+   ``cross_val_score`` with default scoring do **not** produce meaningful
+   test-fold scores. Use a custom scorer driven by ``get_weights()`` if
+   hyperparameter search is required, or fall back to
+   :meth:`cbps.core.results.CBPSResults.predict` for out-of-sample
+   propensity-score prediction.
 
 References
 ----------
@@ -28,8 +39,11 @@ class CBPSEstimator(BaseEstimator, ClassifierMixin):
     """scikit-learn compatible wrapper for Covariate Balancing Propensity Score.
 
     This estimator wraps the CBPS methodology as a scikit-learn compatible
-    classifier, enabling integration with sklearn's Pipeline, GridSearchCV,
-    and cross-validation utilities.
+    classifier so the fit can sit inside a :class:`~sklearn.pipeline.Pipeline`
+    alongside standard preprocessors. ``GridSearchCV`` and ``cross_val_score``
+    with default scoring are **not** supported because ``predict_proba`` /
+    ``predict`` only return the stored training-sample propensity scores
+    (see the Notes section below).
 
     CBPS estimates propensity scores by simultaneously optimizing treatment
     prediction and covariate balance through the Generalized Method of Moments

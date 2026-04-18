@@ -49,13 +49,16 @@ via a high-dimensional covariate balancing propensity score. Biometrika,
 
 See Also
 --------
-cbps.CBPS : Standard CBPS for low-dimensional settings.
-cbps.CBPSContinuous : CBPS for continuous treatments.
+cbps.CBPS : Standard CBPS for low-dimensional settings; automatically
+    dispatches to the continuous-treatment branch when the treatment
+    variable is continuous.
+cbps.npCBPS : Nonparametric CBPS for continuous treatments (empirical
+    likelihood).
 """
 
 __all__ = []
 
-# Import hdCBPS function when glmnet is available
+# Import hdCBPS function when glmnetforpython is available
 try:
     from .hdcbps import hdCBPS, HDCBPSResults
     from .lasso_utils import cv_glmnet, select_variables
@@ -68,7 +71,7 @@ except ImportError:
         ImportWarning
     )
 
-# Weight functions (available regardless of glmnet)
+# Weight functions (available regardless of glmnetforpython)
 from .weight_funcs import (
     ate_wt_func,
     ate_wt_nl_func,

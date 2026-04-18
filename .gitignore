@@ -53,7 +53,6 @@ desktop.ini
 docs/_build/
 docs/build.log
 docs/build_full.log
-docs/api/
 
 # Tox / Nox
 .tox/

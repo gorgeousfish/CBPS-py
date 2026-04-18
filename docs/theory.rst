@@ -45,8 +45,6 @@ where the moment conditions are:
 The first set of moments ensures prediction accuracy (standard logistic regression).
 The second set enforces covariate balance (weighted means are equal across groups).
 
-**Reference:** Imai & Ratkovic (2014), JRSS-B, DOI: `10.1111/rssb.12027 <https://doi.org/10.1111/rssb.12027>`_
-
 Continuous Treatment
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -84,9 +82,13 @@ Overall balance is assessed using:
 
    F = n \cdot R^2_w / (1 - R^2_w)
 
-where :math:`R^2_w` is the weighted R-squared from regressing :math:`T` on :math:`X`. Target: :math:`F < 10^{-4}`.
-
-**Reference:** Fong, Hazlett & Imai (2018), The Annals of Applied Statistics, DOI: `10.1214/17-AOAS1101 <https://doi.org/10.1214/17-AOAS1101>`_
+where :math:`R^2_w` is the weighted R-squared from regressing :math:`T` on
+:math:`X`. Balanced weights drive :math:`F` toward zero; as a concrete
+benchmark, Fong, Hazlett and Imai (2018, Figure 3) report
+:math:`F \approx 9.3 \times 10^{-5}` for CBGPS on the political-ads
+application. Appropriate targets depend on sample size, covariate design,
+and treatment scaling, and should be interpreted relative to the MLE
+baseline for the same problem rather than used as a universal cutoff.
 
 Marginal Structural Models (MSM)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -105,12 +107,6 @@ When :math:`\beta_t = \beta` for all :math:`t` (``time_vary=False``), the propen
 
    \pi(T_{it} | X_{it}, T_{i,t-1}; \beta) = \frac{1}{1 + \exp(-[X_{it}, T_{i,t-1}]^T \beta)}
 
-**Critical Implementation Detail:**
-
-The coefficient vector :math:`\beta` must be correctly expanded to match the stacked covariate matrix across all time periods.
-
-**Reference:** Imai & Ratkovic (2015), JASA, DOI: `10.1080/01621459.2014.956872 <https://doi.org/10.1080/01621459.2014.956872>`_
-
 High-Dimensional CBPS
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -127,8 +123,6 @@ where :math:`\ell(\beta)` is the log-likelihood and :math:`\lambda` is chosen by
 **Step 2: CBPS on Selected Variables**
 
 Let :math:`S = \{j : \hat{\beta}^{\text{LASSO}}_j \neq 0\}` be the selected variables. Estimate CBPS using only :math:`X_S`.
-
-**Reference:** Ning, Peng & Imai (2020), Biometrika, DOI: `10.1093/biomet/asaa020 <https://doi.org/10.1093/biomet/asaa020>`_
 
 Instrumental Variables
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -149,7 +143,71 @@ where :math:`D_i(z)` is the potential treatment under instrument :math:`z`.
 2. Compute IV weights
 3. Estimate CACE using weighted regression
 
-**Reference:** Fong (2018), Unpublished manuscript
+Optimal CBPS (oCBPS)
+^^^^^^^^^^^^^^^^^^^^
+
+Fan, Imai, Lee, Liu, Ning, and Yang (2022) extend the binary CBPS framework
+with a *dual* set of balancing conditions that achieve the semiparametric
+efficiency bound for the average treatment effect.
+
+**Balancing Conditions:**
+
+Let :math:`\pi_i = \pi(X_i; \beta)` denote the propensity score. Following
+Fan et al. (2022, Eq. 3.3), the oCBPS estimator :math:`\hat{\beta}` solves
+the joint GMM moment conditions
+
+.. math::
+
+   \frac{1}{n} \sum_{i=1}^n
+   \left(\frac{T_i}{\pi_i} - \frac{1 - T_i}{1 - \pi_i}\right)
+   h_1(X_i) = \mathbf{0},
+   \qquad
+   \frac{1}{n} \sum_{i=1}^n
+   \left(\frac{T_i}{\pi_i} - 1\right) h_2(X_i) = \mathbf{0},
+
+where :math:`h_1(X)` and :math:`h_2(X)` are user-specified basis functions.
+The first condition is the standard CBPS-style balancing equation on
+:math:`h_1`; the second matches the *weighted* covariates
+:math:`\{(1 - \pi_i)/\pi_i \cdot h_2(X_i) : T_i = 1\}` in the treated group
+to the *unweighted* covariates :math:`\{h_2(X_i) : T_i = 0\}` in the
+control group. Setting :math:`h_1(X) = K(X) := E[Y(0) \mid X]` and
+:math:`h_2(X) = L(X) := E[Y(1) - Y(0) \mid X]` yields the optimal
+balancing function
+
+.. math::
+
+   \alpha^{\top} f(X) = \pi(X)\, E[Y(0) \mid X] + (1 - \pi(X))\, E[Y(1) \mid X]
+
+from Fan et al. (2022, Corollary 2.2), producing a doubly-robust ATE
+estimator whose asymptotic variance attains the semiparametric efficiency
+bound of Hahn (1998).
+
+**Sandwich Variance:**
+
+The asymptotic variance is available in closed form. Writing
+:math:`\mu = E[Y(1)] - E[Y(0)]`, Fan et al. (2022, Theorem 3.2) show
+
+.. math::
+
+   \sqrt{n}(\hat{\mu} - \mu) \;\xrightarrow{d}\;
+   \mathcal{N}\!\left(0,\; \sigma_{\text{oCBPS}}^2\right),
+
+with :math:`\sigma_{\text{oCBPS}}^2` implemented by :func:`cbps.AsyVar`
+when its ``method`` argument is ``"oCBPS"``. The full (sub-optimal) sandwich
+formula is also available via ``cbps.AsyVar(..., method="CBPS")`` (this
+refers to the ``method`` argument of ``AsyVar``, not the ``method``
+argument of :func:`cbps.CBPS`).
+
+**Relationship to the Python API:**
+
+- :func:`cbps.CBPS` with ``baseline_formula`` and ``diff_formula`` fits
+  the oCBPS moment conditions above, with the ``baseline_formula`` design
+  matrix playing the role of :math:`h_1(X)` and the ``diff_formula``
+  design matrix the role of :math:`h_2(X)` (see
+  :func:`cbps.core.cbps_optimal.cbps_optimal_2treat` in the source).
+- :func:`cbps.AsyVar` computes the asymptotic variance using either the
+  full sandwich or the oCBPS efficiency-bound variance, depending on its
+  ``method`` argument.
 
 Estimation Methods
 ------------------
@@ -188,41 +246,21 @@ When using ``method='over'``, the two-step GMM estimator uses the optimal weight
 When to Use Each Method
 -----------------------
 
-+-------------------+---------------------------+---------------------------+
-| Method            | Use When                  | Avoid When                |
-+===================+===========================+===========================+
-| Binary CBPS       | Binary treatment          | Continuous treatment      |
-+-------------------+---------------------------+---------------------------+
-| Continuous CBPS   | Continuous treatment      | Binary treatment          |
-+-------------------+---------------------------+---------------------------+
-| CBMSM             | Longitudinal data         | Cross-sectional data      |
-+-------------------+---------------------------+---------------------------+
-| hdCBPS            | p ≈ n or p >> n           | p << n                    |
-+-------------------+---------------------------+---------------------------+
-| npCBPS            | Nonlinear relationships   | Linear relationships      |
-+-------------------+---------------------------+---------------------------+
-| CBIV              | Noncompliance/IV setting  | No instrument available   |
-+-------------------+---------------------------+---------------------------+
-
-Key References
---------------
-
-1. **Imai, K., & Ratkovic, M. (2014).** Covariate balancing propensity score. 
-   *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*, 76(1), 243-263.
-   DOI: `10.1111/rssb.12027 <https://doi.org/10.1111/rssb.12027>`_
-
-2. **Imai, K., & Ratkovic, M. (2015).** Robust estimation of inverse probability weights for marginal structural models.
-   *Journal of the American Statistical Association*, 110(511), 1013-1023.
-   DOI: `10.1080/01621459.2014.956872 <https://doi.org/10.1080/01621459.2014.956872>`_
-
-3. **Fong, C., Hazlett, C., & Imai, K. (2018).** Covariate balancing propensity score for a continuous treatment.
-   *The Annals of Applied Statistics*, 12(1), 156-177.
-   DOI: `10.1214/17-AOAS1101 <https://doi.org/10.1214/17-AOAS1101>`_
-
-4. **Ning, Y., Peng, S., & Imai, K. (2020).** Robust estimation of causal effects via a high-dimensional covariate balancing propensity score.
-   *Biometrika*, 107(3), 533-554.
-   DOI: `10.1093/biomet/asaa020 <https://doi.org/10.1093/biomet/asaa020>`_
-
-5. **Fong, C. (2018).** Robust and efficient estimation of causal effects with calibrated covariate balance.
-   *Unpublished manuscript*.
-
++-------------------+--------------------------------+---------------------------+
+| Method            | Use When                       | Avoid When                |
++===================+================================+===========================+
+| Binary CBPS       | Binary treatment               | Continuous treatment      |
++-------------------+--------------------------------+---------------------------+
+| Continuous CBPS   | Continuous treatment           | Binary treatment          |
++-------------------+--------------------------------+---------------------------+
+| Optimal CBPS      | Want efficiency-bound SE       | No outcome model available|
+|                   | for ATE with binary treatment  |                           |
++-------------------+--------------------------------+---------------------------+
+| CBMSM             | Longitudinal data              | Cross-sectional data      |
++-------------------+--------------------------------+---------------------------+
+| hdCBPS            | p ≈ n or p >> n                | p << n                    |
++-------------------+--------------------------------+---------------------------+
+| npCBPS            | Nonlinear relationships        | Linear relationships      |
++-------------------+--------------------------------+---------------------------+
+| CBIV              | Noncompliance/IV setting       | No instrument available   |
++-------------------+--------------------------------+---------------------------+

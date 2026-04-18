@@ -11,9 +11,9 @@ Submodules
 ----------
 asyvar
     Asymptotic variance estimation for binary treatment ATE using the
-    sandwich variance estimator. Implements both the semiparametric efficiency
-    bound (oCBPS, Corollary 2.2) and the full sandwich formula (CBPS,
-    Theorem 2.1) from Fan et al. (2022).
+    sandwich variance estimator. Implements both the semiparametric
+    efficiency bound (oCBPS) and the full sandwich formula (CBPS) from
+    Fan et al. (2022).
 
 vcov_outcome
     Variance-covariance adjustment for weighted outcome regressions with
