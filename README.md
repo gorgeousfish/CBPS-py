@@ -2,7 +2,10 @@
 
 **Covariate Balancing Propensity Score for Python**
 
+<!-- PyPI badge disabled until cbps-python is published to PyPI.
+     Uncomment the next line after the first PyPI release:
 [![PyPI version](https://img.shields.io/pypi/v/cbps-python.svg)](https://pypi.org/project/cbps-python/)
+-->
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/cbps-python/badge/?version=latest)](https://cbps-python.readthedocs.io/en/latest/?badge=latest)

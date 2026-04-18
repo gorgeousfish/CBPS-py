@@ -75,6 +75,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`pip install "cbps-python @ git+https://github.com/gorgeousfish/CBPS-py.git"`)
   because the package is not yet published to PyPI, and noted how to
   switch back to the shorter PyPI form once the package is released
+- Commented out the PyPI version badge in `README.md` (wrapped in an
+  HTML comment with a restore hint) because `cbps-python` is not yet
+  published to PyPI and the badge was rendering as a broken
+  "package not found" image
 
 ## [0.1.0] - 2025-12-04
 
