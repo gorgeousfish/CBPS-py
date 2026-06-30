@@ -1,0 +1,24 @@
+[flake8]
+max-line-length = 88
+max-complexity = 15
+extend-ignore = E203, W503
+statistics = true
+count = true
+per-file-ignores =
+    tests/*:S101,D103,D100
+    examples/*:D100,D103
+    cbps/__init__.py:F401,E402
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    .eggs,
+    *.egg-info,
+    .pytest_cache,
+    .mypy_cache,
+    .tox,
+    .nox,
+    .venv,
+    venv,
+    docs/_build
