@@ -46,7 +46,7 @@ def weight_diagnostics(weights, treat=None):
         - weight_min: minimum absolute weight (among nonzero)
         - weight_ratio: max/min ratio (of absolute values)
         - cv: coefficient of variation of weights
-        - n_extreme: count of weights with |w| > 10*median(|w|)
+        - n_extreme: count of weights with abs(w) > 10*median(abs(w))
         - n_negative: count of negative weights (0 if all non-negative)
         - warning_level: 'ok'/'caution'/'severe'
         - group_diagnostics: dict per treatment group (if treat provided)
@@ -61,7 +61,7 @@ def weight_diagnostics(weights, treat=None):
     For uniform weights, ESS = n. For highly variable weights, ESS << n.
 
     When negative weights are present, the Kish ESS formula does not have
-    its standard interpretation. In this case, ESS is computed on |w| and
+    its standard interpretation. In this case, ESS is computed on abs(w) and
     a warning is included in the result.
 
     References
@@ -143,7 +143,7 @@ def weight_diagnostics(weights, treat=None):
     else:
         cv = np.nan
 
-    # Extreme weight count: |w| > 10 * median(|w|)
+    # Extreme weight count: abs(w) > 10 * median(abs(w))
     median_abs_w = np.median(abs_weights)
     if median_abs_w > 0:
         n_extreme = int(np.sum(abs_weights > 10 * median_abs_w))

@@ -29,14 +29,15 @@ def verify_ocbps_conditions(
     """Check observable necessary conditions for optimal CBPS validity.
 
     Verifies four empirically testable conditions:
-    1. **Identification (dimension)**: m1 + m2 + 1 >= k, where m1 and m2 are
+
+    1. Identification (dimension): m1 + m2 + 1 >= k, where m1 and m2 are
        the numbers of propensity score and outcome moment conditions, and k is
        the covariate dimension. This ensures the system is not under-identified.
-    2. **Balance achieved**: Weighted correlations between covariates and
+    2. Balance achieved: Weighted correlations between covariates and
        treatment are approximately zero after weighting.
-    3. **J-test (overidentification)**: Hansen's J-statistic should not reject
+    3. J-test (overidentification): Hansen's J-statistic should not reject
        (p > 0.05), indicating moment conditions are compatible.
-    4. **Overlap (positivity)**: Propensity scores are bounded away from 0/1.
+    4. Overlap (positivity): Propensity scores are bounded away from 0/1.
 
     Parameters
     ----------
@@ -60,7 +61,7 @@ def verify_ocbps_conditions(
         - identification_ok : bool
             True if dimension condition m1 + m2 + 1 >= k is satisfied.
         - balance_achieved : bool
-            True if max |weighted correlation| < 0.1.
+            True if max abs(weighted correlation) < 0.1.
         - j_test_result : dict or None
             {'statistic': float, 'p_value': float, 'reject': bool} or None
             if J-test info not available.
@@ -123,7 +124,7 @@ def verify_ocbps_conditions(
     balance_achieved = bool(max_abs_corr < 0.1)
     if not balance_achieved:
         warn_list.append(
-            f"Balance not achieved: max |weighted correlation| = "
+            f"Balance not achieved: max abs(weighted correlation) = "
             f"{max_abs_corr:.4f} >= 0.1. Consider increasing the number "
             f"of moment conditions or using over-identified CBPS."
         )
