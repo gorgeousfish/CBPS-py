@@ -4,7 +4,7 @@ Paper Numerical Constants and Tolerance Configuration
 
 Module: paper_constants.py
 Component: Monte Carlo Simulation Test Infrastructure
-Package: cbps-python
+Package: cbps
 
 Description
 -----------

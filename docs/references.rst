@@ -130,7 +130,7 @@ Python Package
 
 **CBPS Python package:**
 
-- **GitHub:** https://github.com/gorgeousfish/cbps-python
+- **GitHub:** https://github.com/gorgeousfish/CBPS-py
 - **Version:** 0.1.0
 - **Authors:** Cai Xuanyu, Xu Wenli
 - **License:** AGPL-3.0-or-later
@@ -183,7 +183,7 @@ When using this Python package in your research, please cite:
 2. **This Python package:**
 
    Cai, X., & Xu, W. (2025). CBPS Python: Python implementation of Covariate Balancing Propensity Score.
-   Version 0.1.0. https://github.com/gorgeousfish/cbps-python
+   Version 0.1.0. https://github.com/gorgeousfish/CBPS-py
 
 BibTeX Entries
 --------------

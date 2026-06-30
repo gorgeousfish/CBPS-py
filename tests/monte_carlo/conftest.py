@@ -4,7 +4,7 @@ Monte Carlo Test Configuration
 
 Module: conftest.py
 Component: Monte Carlo Simulation Test Infrastructure
-Package: cbps-python
+Package: cbps
 
 Description
 -----------

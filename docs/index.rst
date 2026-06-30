@@ -47,13 +47,13 @@ Basic installation from PyPI:
 
 .. code-block:: bash
 
-   pip install cbps-python
+   pip install cbps
 
 Full installation with all features:
 
 .. code-block:: bash
 
-   pip install 'cbps-python[all]'
+   pip install 'cbps[all]'
 
 Basic Example
 ~~~~~~~~~~~~~
@@ -126,9 +126,9 @@ For comprehensive examples covering all treatment types and advanced features, s
    :caption: Resources
    :hidden:
 
-   GitHub Repository <https://github.com/gorgeousfish/cbps-python>
-   Issue Tracker <https://github.com/gorgeousfish/cbps-python/issues>
-   Documentation <https://cbps-python.readthedocs.io>
+   GitHub Repository <https://github.com/gorgeousfish/CBPS-py>
+   Issue Tracker <https://github.com/gorgeousfish/CBPS-py/issues>
+   Documentation <https://cbps.readthedocs.io>
 
 Indices and Tables
 ==================
@@ -162,7 +162,7 @@ Imai, K. and Ratkovic, M. (2014). "Covariate Balancing Propensity Score." *Journ
 
 **Software Implementation**
 
-Cai, X. and Xu, W. (2025). *cbps-python: Python Implementation of Covariate Balancing Propensity Score*. Version 0.1.0. https://github.com/gorgeousfish/cbps-python
+Cai, X. and Xu, W. (2025). *cbps: Python Implementation of Covariate Balancing Propensity Score*. Version 0.1.0. https://github.com/gorgeousfish/CBPS-py
 
 License
 =======

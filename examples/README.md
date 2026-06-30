@@ -204,7 +204,7 @@ For complete API documentation, see:
 
 - **API Reference:** `docs/api/`
 - **README:** `../README.md`
-- **Online Documentation:** https://cbps-python.readthedocs.io
+- **Online Documentation:** https://cbps.readthedocs.io
 
 ## License
 
