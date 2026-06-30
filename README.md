@@ -2,10 +2,10 @@
 
 **Covariate Balancing Propensity Score for Python**
 
-[![PyPI version](https://img.shields.io/pypi/v/cbps-python.svg)](https://pypi.org/project/cbps-python/)
+[![PyPI version](https://img.shields.io/pypi/v/cbps.svg)](https://pypi.org/project/cbps/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Documentation Status](https://readthedocs.org/projects/cbps-python/badge/?version=latest)](https://cbps-python.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/cbps/badge/?version=latest)](https://cbps.readthedocs.io/en/latest/?badge=latest)
 [![CITATION.cff](https://img.shields.io/badge/citation-cff-blue.svg)](CITATION.cff)
 
 ![cbps](image/image.jpg)
@@ -38,23 +38,23 @@ This dual optimization yields propensity scores that are more robust to model mi
 ### From PyPI
 
 ```bash
-pip install cbps-python
+pip install cbps
 ```
 
 ### With Optional Dependencies
 
 ```bash
 # High-dimensional CBPS support
-pip install 'cbps-python[hdcbps]'
+pip install 'cbps[hdcbps]'
 
 # Visualization tools
-pip install 'cbps-python[plots]'
+pip install 'cbps[plots]'
 
 # scikit-learn integration
-pip install 'cbps-python[sklearn]'
+pip install 'cbps[sklearn]'
 
 # All features
-pip install 'cbps-python[all]'
+pip install 'cbps[all]'
 ```
 
 ### Development Installation

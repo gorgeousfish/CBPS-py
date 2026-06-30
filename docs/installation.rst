@@ -8,7 +8,7 @@ The CBPS Python package can be installed using pip:
 
 .. code-block:: bash
 
-   pip install cbps-python
+   pip install cbps
 
 This will install the core package with all required dependencies:
 
@@ -22,7 +22,7 @@ For visualization features (diagnostic plots), install with:
 
 .. code-block:: bash
 
-   pip install 'cbps-python[plots]'
+   pip install 'cbps[plots]'
 
 This adds matplotlib >= 3.5.0 for balance plots and weight distribution visualization.
 
@@ -30,7 +30,7 @@ For scikit-learn integration (``CBPSEstimator`` pipeline compatibility), install
 
 .. code-block:: bash
 
-   pip install 'cbps-python[sklearn]'
+   pip install 'cbps[sklearn]'
 
 This adds scikit-learn >= 1.0.0 for use with scikit-learn pipelines and cross-validation utilities.
 
@@ -95,8 +95,8 @@ To install the package in development mode (for contributing or testing):
 
    .. code-block:: bash
 
-      git clone https://github.com/gorgeousfish/cbps-python.git
-      cd cbps-python
+      git clone https://github.com/gorgeousfish/CBPS-py.git
+      cd cbps
 
 2. Install in editable mode with development dependencies:
 
@@ -156,12 +156,11 @@ Troubleshooting
 
 **Problem:** ``ImportError: cannot import name 'CBPS'``
 
-**Solution:** Make sure you installed ``cbps-python``, not ``cbps``:
+**Solution:** Make sure you installed the package from the correct source:
 
 .. code-block:: bash
 
-   pip uninstall cbps  # Remove wrong package
-   pip install cbps-python  # Install correct package
+   pip install git+https://github.com/gorgeousfish/CBPS-py.git
 
 Upgrading
 ---------
@@ -170,7 +169,7 @@ To upgrade to the latest version:
 
 .. code-block:: bash
 
-   pip install --upgrade cbps-python
+   pip install --upgrade cbps
 
 Uninstallation
 --------------
@@ -179,7 +178,7 @@ To uninstall the package:
 
 .. code-block:: bash
 
-   pip uninstall cbps-python
+   pip uninstall cbps
 
 Next Steps
 ----------

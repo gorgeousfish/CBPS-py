@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cbps-python"
+name = "cbps"
 version = "0.1.0"
 description = "Covariate Balancing Propensity Score (CBPS) for causal inference in Python"
 readme = "README.md"
@@ -82,12 +82,12 @@ docs = [
     "myst-parser>=1.0.0",
     "ipykernel>=6.0.0",
 ]
-all = ["cbps-python[plots,sklearn,hdcbps]"]
+all = ["cbps[plots,sklearn,hdcbps]"]
 
 [project.urls]
-Homepage = "https://cbps-python.readthedocs.io"
+Homepage = "https://cbps.readthedocs.io"
 Repository = "https://github.com/gorgeousfish/CBPS-py"
-Documentation = "https://cbps-python.readthedocs.io"
+Documentation = "https://cbps.readthedocs.io"
 Changelog = "https://github.com/gorgeousfish/CBPS-py/blob/main/CHANGELOG.md"
 "Bug Tracker" = "https://github.com/gorgeousfish/CBPS-py/issues"
 
