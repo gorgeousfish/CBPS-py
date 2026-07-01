@@ -24,9 +24,10 @@ sphinx:
   fail_on_warning: true
 
 # Optionally build your docs in additional formats such as PDF and ePub
-formats:
-  - pdf
-  - epub
+# Disabled: PDF build produces multiple files which RTD doesn't support
+# formats:
+#   - pdf
+#   - epub
 
 # Install the package and documentation dependencies
 python:
