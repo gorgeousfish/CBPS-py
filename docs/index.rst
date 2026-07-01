@@ -119,7 +119,6 @@ For comprehensive examples covering all treatment types and advanced features, s
    theory
    advanced_usage
    implementation_notes
-   comparison_analysis
    references
 
 .. toctree::
